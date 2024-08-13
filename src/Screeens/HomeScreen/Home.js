@@ -408,6 +408,9 @@ const Home = ({ route }) => {
           <Image source={imagePath.greenIndicator} />
         </TouchableOpacity>
       <View style={styles.bottomCard}>
+
+      </View>
+
       {acceptedBooking
         ? renderAcceptedBookingItem()
         : online && (
@@ -418,8 +421,6 @@ const Home = ({ route }) => {
               contentContainerStyle={styles.bookingList}
             />
           )}
-      </View>
-
     </View>
   );
 };
