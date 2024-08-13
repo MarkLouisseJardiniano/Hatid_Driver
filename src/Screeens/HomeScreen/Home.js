@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   onlineOfflineButton: {
     padding: 10,
     borderRadius: 5,
-    top: 600,
+    top: 400,
     left: 160
   },
   onlineOfflineButtonText: {
