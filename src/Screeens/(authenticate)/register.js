@@ -20,8 +20,6 @@ const Signup = () => {
       return;
     }
   
-    // You might want to add more validation for email and password here
-  
     try {
       await AsyncStorage.setItem('driver', JSON.stringify({ name, email, password, number, birthday, address }));
       navigation.navigate("License");

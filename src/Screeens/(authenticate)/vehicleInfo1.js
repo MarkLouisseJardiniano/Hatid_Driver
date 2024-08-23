@@ -22,7 +22,6 @@ const VehicleInformation = () => {
   const [vehicleRight, setVehicleRight] = useState("");
 
   // Function to handle image picking
-
   useEffect(() => {
     const getPermissions = async () => {
       const { status } =
@@ -71,9 +70,8 @@ const VehicleInformation = () => {
     }
   };
 
-  // Function to handle the "Next" button press
   const handleNext = async () => {
-    // Save image URIs to AsyncStorage
+    // Save image to AsyncStorage
     await AsyncStorage.setItem(
       "vehicleInfo1",
       JSON.stringify({
@@ -86,7 +84,6 @@ const VehicleInformation = () => {
       })
     );
 
-    // Navigate to the next screen
     navigation.navigate("VehicleInfo2");
   };
 

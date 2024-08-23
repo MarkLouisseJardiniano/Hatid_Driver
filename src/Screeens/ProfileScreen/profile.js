@@ -7,10 +7,9 @@ import { useNavigation } from "@react-navigation/native";
 const Profile = () => {
   const navigation = useNavigation();
   const [userData, setUserData] = useState(null);
+  const [rating, setRating] = useState(null);
+  const [driverId, setDriverId] = useState('')
 
-  const HandleLogOut = () => {
-    Alert.alert("Button Pressed", "You clicked the button!");
-  };
 
   const handleEdit = () => {
     navigation.navigate("EditProfile");
@@ -23,14 +22,17 @@ const Profile = () => {
   const handleContact = () => {
     navigation.navigate("Contact");
   };
+  const handleSubscription = () => {
+    navigation.navigate("Subscription");
+  };
 
-  // Function to fetch user data
   const fetchData = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const res = await axios.post('https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/driver/driverdata', { token });
       if (res.data.status === 'ok') {
         setUserData(res.data.data);
+        setDriverId(res.data.data._id); 
       } else {
         console.error('Failed to fetch user data');
       }
@@ -38,17 +40,59 @@ const Profile = () => {
       console.error('Error fetching user data:', error);
     }
   };
+  
 
-  // Polling setup
+  const fetchRating = async () => {
+    try {
+      if (!driverId) return;
+  
+      const res = await axios.get(`https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/rate/ratings/${driverId}`);
+      
+      console.log("API Response:", res.data); 
+      if (res.data.status === 'ok') {
+        const { averageRating } = res.data.data;
+    
+        console.log("Fetched Average Rating:", averageRating);
+  
+        // Round to one decimal place only
+        const formattedRating = averageRating.toFixed(1);
+  
+        setRating(formattedRating);
+      } else {
+        console.error("Cannot find rating");
+        setRating('0.0'); 
+      }
+    } catch (error) {
+      console.error('Error fetching driver rating:', error);
+      setRating('0.0');
+    }
+  };
+  
+  
   useEffect(() => {
-    fetchData(); // Fetch data on component mount
+    console.log("Current driverId:", driverId);
+    if (driverId) {
+      fetchRating();
+    }
+    const intervalId = setInterval(fetchRating, 2000); // Poll every 2 seconds
 
-    // Set up polling interval
-    const intervalId = setInterval(fetchData, 3000); // Poll every 3 seconds
+    return () => clearInterval(intervalId);
+  }, [driverId]);
+  
 
-    // Clear interval on component unmount
+  useEffect(() => {
+    fetchData(); 
+
+    const intervalId = setInterval(fetchData, 3000); 
+
     return () => clearInterval(intervalId);
   }, []);
+
+  const HandleLogOut = async () => {
+    await AsyncStorage.removeItem('token');
+    navigation.navigate("Login"); 
+  };
+  
 
   return (
     <View style={styles.rowContainer}>
@@ -56,7 +100,7 @@ const Profile = () => {
         <View style={styles.circle} />
         {userData ? (
           <View>
-            <Text style={styles.userName}> {userData.name}</Text>
+            <Text style={styles.userName}> {userData.name} <View style={styles.ratings}><Text style={styles.averageRating}>{rating !== null ? rating : 'Loading...'}</Text></View></Text>
           </View>
         ) : (
           <Text>Loading...</Text>
@@ -77,6 +121,9 @@ const Profile = () => {
           <Text style={{ fontWeight: "700", fontSize: 20 }}>
             Emergency Contact
           </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleSubscription}>
+          <Text style={{ fontWeight: "700", fontSize: 20 }}>Subscription</Text>
         </TouchableOpacity>
       </View>
 
@@ -147,6 +194,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
   },
+  ratings: {
+    backgroundColor: 'white',
+  },
+  averageRating: {
+  }
 });
 
 export default Profile;

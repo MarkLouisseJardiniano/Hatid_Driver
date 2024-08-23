@@ -16,7 +16,7 @@ const Login = () => {
       const driverData = { email, password };
       const res = await axios.post(`https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/driver/driver-login`, driverData);
         
-      console.log('Login Response:', res.data);  // Log the entire response for debugging
+      console.log('Login Response:', res.data); 
     
       if (res.data.status === 'ok') {
         const { token, driverId } = res.data.data;
@@ -25,14 +25,14 @@ const Login = () => {
           throw new Error('Driver ID is missing in the response');
         }
         
-        await AsyncStorage.setItem('KeepLoggedIn', 'true');  // Ensure 'true' is a string
-        await AsyncStorage.setItem('token', token);  // Save token properly
+        await AsyncStorage.setItem('KeepLoggedIn', 'true');  
+        await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('driverId', driverId); 
           
         console.log('Token:', token);
         console.log('Driver ID:', driverId);
   
-        navigation.replace("TabNav");  // Navigate to home screen after successful login
+        navigation.replace("TabNav"); 
       } else {
         Alert.alert('Login Failed', res.data.message);
       }

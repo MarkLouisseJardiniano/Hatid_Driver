@@ -2,7 +2,6 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AntDesign, Entypo, Ionicons } from '@expo/vector-icons';
 
-// Import your screens
 import HomeScreen from '../navigation/HomeStack';
 import ProfileScreen from '../navigation/ProfileStack';
 

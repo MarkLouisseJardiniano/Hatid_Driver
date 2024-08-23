@@ -3,7 +3,7 @@ import { StatusBar } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import Authenticate from "../Screeens/(authenticate)/auth";
 import Login from "../Screeens/(authenticate)/login";
-import SignupStack from "../navigation/signupStack"; // Import SignupStack
+import SignupStack from "../navigation/signupStack";
 
 const Stack = createStackNavigator();
 

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  Image,
   Platform,
 } from "react-native";
 import MapView, { Marker, AnimatedRegion } from "react-native-maps";
@@ -20,6 +19,7 @@ import {
 } from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { Image } from 'expo-image';
 import { FlatList } from "react-native-gesture-handler";
 import { useNavigation } from "@react-navigation/native";
 
@@ -33,8 +33,10 @@ const Home = ({ route }) => {
   const markerRef = useRef();
   const navigation = useNavigation();
   const [online, setOnline] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [acceptedBooking, setAcceptedBooking] = useState(null);
+  const [driverId, setDriverId] = useState(null);
   const [tripStarted, setTripStarted] = useState(false);
   const [tripCompleted, setTripCompleted] = useState(false);
 
@@ -186,15 +188,54 @@ const Home = ({ route }) => {
       }
     };
 
+    
+
     if (online) {
       fetchAvailableBookings();
       // Poll every 0.3 seconds
       const intervalId = setInterval(fetchAvailableBookings, 300);
 
-      // Clear interval on component unmount
+      // Clear interval
       return () => clearInterval(intervalId);
     }
   }, [online]);
+
+  useEffect(() => {
+    const fetchDriverIdAndCheckSubscription = async () => {
+      try {
+        const storedDriverId = await AsyncStorage.getItem('driverId');
+        if (storedDriverId) {
+          setDriverId(storedDriverId);
+          await checkSubscriptionStatus(storedDriverId);
+        } else {
+          setError('Driver ID not found.');
+        }
+      } catch (err) {
+        console.error('Error fetching driver ID:', err);
+        setError('Error fetching driver ID.');
+      }
+    };
+
+    fetchDriverIdAndCheckSubscription();
+  }, []);
+
+  const checkSubscriptionStatus = async (id) => {
+    try {
+      const response = await axios.get(`https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/subs/subscription/status/${id}`);
+      setSubscribed(response.data.subscribed);
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      setError('Error checking subscription status.');
+    }
+  };
+
+  const toggleOnlineStatus = () => {
+    if (subscribed) {
+      setOnline(!online);
+    } else {
+      setError('You need an active subscription to go online.');
+    }
+  };
 
   const handleAccept = async (bookingId) => {
     try {
@@ -242,7 +283,6 @@ const Home = ({ route }) => {
 
     // Start the trip
     setTripStarted(true);
-    // Implement logic to notify the backend if needed
     console.log("Trip started");
   };
 
@@ -251,10 +291,11 @@ const Home = ({ route }) => {
 
     // End the trip
     setTripStarted(false);
-    setTripCompleted(true); // Mark the trip as completed
-    // Implement logic to notify the backend if needed
+    setTripCompleted(true); 
     console.log("Trip ended");
   };
+
+
 
   const handleCompleteBooking = async () => {
     if (!acceptedBooking) return;
@@ -309,6 +350,19 @@ const Home = ({ route }) => {
   const renderAcceptedBookingItem = () => (
     <View style={styles.bookingItem}>
       <Text>{acceptedBooking.name}</Text>
+
+      <TouchableOpacity>
+    <Image
+        style={styles.image}
+        source={imagePath.message}
+      />
+    </TouchableOpacity>
+    <TouchableOpacity>
+    <Image
+        style={styles.image}
+        source={imagePath.call}
+      />
+    </TouchableOpacity>
       <Text>
         Pickup: {acceptedBooking.pickupLocation.latitude},{" "}
         {acceptedBooking.pickupLocation.longitude}
@@ -349,17 +403,19 @@ const Home = ({ route }) => {
     <View style={styles.container}>
       <Loader isLoading={isLoading} />
       <View style={styles.topContainer}>
-        <TouchableOpacity
-          style={[
-            styles.onlineOfflineButton,
-            { backgroundColor: online ? "green" : "red" },
-          ]}
-          onPress={() => setOnline(!online)}
-        >
-          <Text style={styles.onlineOfflineButtonText}>
-            {online ? "Go Offline" : "Go Online"}
-          </Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.onlineOfflineButton,
+          { backgroundColor: online ? 'green' : 'red' },
+          !subscribed && styles.buttonDisabled,
+        ]}
+        onPress={toggleOnlineStatus}
+        disabled={!subscribed}
+      >
+        <Text style={styles.onlineOfflineButtonText}>
+          {online ? 'Go Offline' : 'Go Online'}
+        </Text>
+      </TouchableOpacity>
       </View>
 
       <MapView
@@ -478,6 +534,11 @@ const styles = StyleSheet.create({
     position:'absolute',
     top: 300
   },
+image: {
+  width: 30,
+  height: 30,
+},
+  
 });
 
 export default Home;
