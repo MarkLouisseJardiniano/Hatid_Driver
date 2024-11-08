@@ -14,7 +14,7 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const driverData = { email, password };
-      const res = await axios.post(`https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/driver/driver-login`, driverData);
+      const res = await axios.post(`https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/driver/driver-login`, driverData);
         
       console.log('Login Response:', res.data); 
     
@@ -28,6 +28,7 @@ const Login = () => {
         await AsyncStorage.setItem('KeepLoggedIn', 'true');  
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('driverId', driverId); 
+        await AsyncStorage.removeItem("bookingId");
           
         console.log('Token:', token);
         console.log('Driver ID:', driverId);

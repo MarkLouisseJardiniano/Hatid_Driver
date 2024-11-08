@@ -14,7 +14,7 @@ const EditProfile = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const res = await axios.put(
-        `https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/driver/editdriver/${driverId}`,
+        `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/driver/editdriver/${driverId}`,
         {
           name,
           number,
@@ -42,7 +42,7 @@ const EditProfile = () => {
     const fetchData = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const res = await axios.post('https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/driver/driverdata', { token });
+        const res = await axios.post('https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/driver/driverdata', { token });
         if (res.data.status === 'ok') {
           const data = res.data.data;
           setDriverData(data);

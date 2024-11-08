@@ -3,7 +3,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import EditProfile from '../Screeens/ProfileScreen/editProfile'; 
 import Profile from '../Screeens/ProfileScreen/profile'; 
-import SavedPlaces from '../Screeens/ProfileScreen/savedPlaces'; 
 import Contact from '../Screeens/ProfileScreen/contact'; 
 import AddContact from '../Screeens/ProfileScreen/addContact'; 
 import Subscription from '../Screeens/ProfileScreen/subscription';
@@ -20,7 +19,6 @@ export default function Layout() {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="EditProfile" component={EditProfile} />
-      <Stack.Screen name="SavedPlaces" component={SavedPlaces} />
       <Stack.Screen name="Contact" component={Contact} />
       <Stack.Screen name="AddContact" component={AddContact} />
       <Stack.Screen name="Subscription" component={Subscription} />

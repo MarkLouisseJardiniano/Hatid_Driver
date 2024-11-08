@@ -1,8 +1,70 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const Subscription = () => {
-  const [selectedOption, setSelectedOption] = useState('tricycle');
+  const [selectedOption, setSelectedOption] = useState('');
+  const [driverId, setDriverId] = useState(null);
+  const [vehicleInfo2, setVehicleInfo2] = useState(null);
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const storedDriverId = await AsyncStorage.getItem('driverId');
+        if (storedDriverId) {
+          setDriverId(storedDriverId);
+          fetchUserData(storedDriverId);
+        } else {
+          Alert.alert('Error', 'Driver ID not found. Please log in again.');
+        }
+      } catch (error) {
+        console.error('Error fetching driver ID:', error);
+        Alert.alert('Error', 'Error fetching driver ID');
+      }
+    };
+
+    const fetchUserData = async (id) => {
+      try {
+        const response = await axios.get(`https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/driver/driver/${id}`);
+        setVehicleInfo2(response.data.vehicleInfo2);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        Alert.alert('Error', 'Error fetching user data');
+      }
+    };
+
+    fetchUserId();
+  }, []);
+ 
+  const handleSubscribe = async () => {
+    if (!selectedOption) {
+      Alert.alert('Error', 'Please select a subscription type.');
+      return;
+    }
+  
+    if (!vehicleInfo2) {
+      Alert.alert('Error', 'Vehicle info not loaded.');
+      return;
+    }
+  
+    const subscriptionType = selectedOption;
+    const vehicleType = vehicleInfo2.vehicleType;
+  
+    try {
+      await axios.post('https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/subs/subscription', {
+        driverId,
+        subscriptionType,
+        vehicleType,
+      });
+  
+      Alert.alert('Success', 'Subscription created successfully!');
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      Alert.alert('Error', 'Error creating subscription');
+    }
+  };
+  
 
   const renderRadioButton = (value) => (
     <TouchableOpacity
@@ -18,60 +80,75 @@ const Subscription = () => {
     </TouchableOpacity>
   );
 
+  if (vehicleInfo2 === null) {
+    return <View style={styles.container}><Text>Loading...</Text></View>;
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Subscribe</Text>
       <Text style={styles.subtitle}>Choose your plan</Text>
-      <View style={styles.optionContainer}>
-      <Text  style={styles.header}>For Tricycle</Text>
-        <View style={styles.subsOption}>
-        <View style={styles.selection}>
-        {renderRadioButton('tricycle-free')}
-        <Text style={styles.optionText}>Free</Text>
+      
+      {vehicleInfo2.vehicleType === 'Tricycle' && (
+        <View style={styles.optionContainer}>
+          <Text style={styles.header}>For Tricycle</Text>
+          <View style={styles.subsOption}>
+            <View style={styles.selection}>
+              {renderRadioButton('Free')}
+              <Text style={styles.optionText}>Free</Text>
+            </View>
+            <View style={styles.selection}>
+              {renderRadioButton('Monthly')}
+              <Text style={styles.optionText}>Monthly</Text>
+            </View>
+            <View style={styles.selection}>
+              {renderRadioButton('Quarterly')}
+              <Text style={styles.optionText}>Quarterly</Text>
+            </View>
+            <View style={styles.selection}>
+              {renderRadioButton('Anually')}
+              <Text style={styles.optionText}>Annually</Text>
+            </View>
+          </View>
         </View>
-        <View style={styles.selection}>
-        {renderRadioButton('tricycle-month')}
-        <Text style={styles.optionText}>Monthly</Text>
+      )}
+      
+      {vehicleInfo2.vehicleType === 'Jeep' && (
+        <View style={styles.optionContainer}>
+          <Text style={styles.header}>For Jeep</Text>
+          <View style={styles.subsOption}>
+            <View style={styles.selection}>
+              {renderRadioButton('Free')}
+              <Text style={styles.optionText}>Free</Text>
+            </View>
+            <View style={styles.selection}>
+              {renderRadioButton('Monthly')}
+              <Text style={styles.optionText}>Monthly</Text>
+            </View>
+            <View style={styles.selection}>
+              {renderRadioButton('Quarterly')}
+              <Text style={styles.optionText}>Quarterly</Text>
+            </View>
+            <View style={styles.selection}>
+              {renderRadioButton('Annually')}
+              <Text style={styles.optionText}>Annually</Text>
+            </View>
+          </View>
         </View>
-        <View style={styles.selection}>
-        {renderRadioButton('tricycle-quarter')}
-        <Text style={styles.optionText}>Quarterly</Text>
-        </View>
-        <View style={styles.selection}>
-        {renderRadioButton('tricycle-annual')}
-        <Text style={styles.optionText}>Annually</Text>
-        </View>
-        </View>
-      </View>
-      <View style={styles.optionContainer}>
-      <Text style={styles.header}>For Jeepney</Text>
-        <View style={styles.subsOption}>
-        <View style={styles.selection}>
-        {renderRadioButton('jeepney-free')}
-        <Text style={styles.optionText}>Free</Text>
-        </View>
-        <View style={styles.selection}>
-        {renderRadioButton('jeepney-month')}
-        <Text style={styles.optionText}>Monthly</Text>
-        </View>
-        <View style={styles.selection}>
-        {renderRadioButton('jeepney-quarter')}
-        <Text style={styles.optionText}>Quarterly</Text>
-        </View>
-        <View style={styles.selection}>
-        {renderRadioButton('jeepney-annual')}
-        <Text style={styles.optionText}>Annually</Text>
-        </View>
-        </View>
-      </View>
+      )}
+
+      <TouchableOpacity style={styles.subscribeButton} onPress={handleSubscribe}>
+        <Text style={styles.subscribeButtonText}>Subscribe</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginLeft: 40,
+    marginLeft: 20,
     marginTop: 20,
+    paddingHorizontal: 10,
     flexDirection: 'column',
   },
   title: {
@@ -80,23 +157,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   header: {
-    fontWeight: '700'
+    fontWeight: '700',
+    marginBottom: 10,
   },
   subtitle: {
     fontSize: 18,
     marginBottom: 20,
   },
   optionContainer: {
-    flexDirection: 'column',
     marginBottom: 15,
   },
   subsOption: {
-    flexDirection: ' row'
+    flexDirection: 'column',
   },
-  selection : {
+  selection: {
     flexDirection: 'row',
-    marginTop: 20,
-    marginRight: 10
+    alignItems: 'center',
+    marginTop: 10,
   },
   optionText: {
     fontSize: 16,
@@ -119,6 +196,18 @@ const styles = StyleSheet.create({
   },
   radioButtonCircleSelected: {
     backgroundColor: '#000',
+  },
+  subscribeButton: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#007BFF',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  subscribeButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

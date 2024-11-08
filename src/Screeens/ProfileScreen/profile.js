@@ -29,7 +29,7 @@ const Profile = () => {
   const fetchData = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const res = await axios.post('https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/driver/driverdata', { token });
+      const res = await axios.post('https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/driver/driverdata', { token });
       if (res.data.status === 'ok') {
         setUserData(res.data.data);
         setDriverId(res.data.data._id); 
@@ -46,7 +46,7 @@ const Profile = () => {
     try {
       if (!driverId) return;
   
-      const res = await axios.get(`https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/rate/ratings/${driverId}`);
+      const res = await axios.get(`https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/rate/ratings/${driverId}`);
       
       console.log("API Response:", res.data); 
       if (res.data.status === 'ok') {
@@ -54,7 +54,6 @@ const Profile = () => {
     
         console.log("Fetched Average Rating:", averageRating);
   
-        // Round to one decimal place only
         const formattedRating = averageRating.toFixed(1);
   
         setRating(formattedRating);
@@ -74,7 +73,7 @@ const Profile = () => {
     if (driverId) {
       fetchRating();
     }
-    const intervalId = setInterval(fetchRating, 2000); // Poll every 2 seconds
+    const intervalId = setInterval(fetchRating, 2000); 
 
     return () => clearInterval(intervalId);
   }, [driverId]);
@@ -113,9 +112,6 @@ const Profile = () => {
       <View style={styles.profileContents}>
         <TouchableOpacity onPress={handleEdit}>
           <Text style={{ fontWeight: "700", fontSize: 20 }}>Edit Profile</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handlePlaces}>
-          <Text style={{ fontWeight: "700", fontSize: 20 }}>Saved Places</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleContact}>
           <Text style={{ fontWeight: "700", fontSize: 20 }}>

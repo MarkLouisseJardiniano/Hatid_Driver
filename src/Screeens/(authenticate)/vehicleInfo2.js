@@ -63,7 +63,7 @@ const VehicleInformation2 = () => {
       console.log('Combined Data:', signupData);
   
       const response = await axios.post(
-        "https://main--exquisite-dodol-f68b33.netlify.app/.netlify/functions/api/driver/driver-signup",
+        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/driver/driver-signup",
         signupData
       );
       if (response.data.message === "Driver created successfully") {

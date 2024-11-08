@@ -4,6 +4,7 @@ import { AntDesign, Entypo, Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from '../navigation/HomeStack';
 import ProfileScreen from '../navigation/ProfileStack';
+import Activity from '../Screeens/ActivityScreen/activity'
 
 const Tab = createBottomTabNavigator();
 
@@ -22,6 +23,21 @@ const TabNav = () => {
               <Entypo name="home" size={24} color="black" />
             ) : (
               <AntDesign name="home" size={24} color="black" />
+            ),
+        }}
+      />
+              <Tab.Screen
+        name="Activity"
+        component={Activity}
+        options={{
+          tabBarLabel: 'Activity',
+          tabBarLabelStyle: { color: '#008E97' },
+          headerShown: true,
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <AntDesign name="plussquare" size={24} color="black" />
+            ) : (
+              <AntDesign name="plussquareo" size={24} color="black" />
             ),
         }}
       />
