@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity, TextInput, Text, StyleSheet } from "react-native";
+import { View, TouchableOpacity, TextInput, Text, StyleSheet, Alert } from "react-native";
 import axios from 'axios';
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,20 +15,46 @@ const Signup = () => {
 
 
   const handleNext = async () => {
+
     if (!name || !email || !password || !number || !birthday || !address) {
       Alert.alert('Validation Error', 'All fields are required.');
       return;
     }
   
     try {
+      const emailCheckResponse = await axios.post(
+        'https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/check-email', 
+        { email }
+      );
+  
+      if (emailCheckResponse.data.exists) {
+        Alert.alert( 'This email is already registered.');
+        return;
+      }
+
       await AsyncStorage.setItem('driver', JSON.stringify({ name, email, password, number, birthday, address }));
-      navigation.navigate("License");
+
+      const otpResponse = await axios.post(
+        'https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/otp/generate-driver-otp',
+        { email, name }
+      );
+  
+      console.log("OTP Response:", otpResponse.data);
+  
+      if (!otpResponse.data.message) {
+        return; // Exit if OTP generation fails
+      }
+  
+      // Navigate to VehicleInfo2 screen after OTP request is successful
+      navigation.navigate('Otp', { email, name });
+  
     } catch (error) {
-      Alert.alert('Error', 'An error occurred while saving data. Please try again.');
+      console.error("Error:", error); // Log the error if something goes wrong
+      const errorMessage = error.response?.data?.error || error.message || 'An error occurred. Please try again.';
+      Alert.alert("Error", errorMessage);
     }
   };
   
-
   const handleBackToLogin = () => {
     navigation.navigate("Login");
   };

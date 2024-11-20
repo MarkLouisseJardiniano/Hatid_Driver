@@ -19,26 +19,24 @@ const VehicleInformation2 = () => {
   const [color, setColor] = useState("");
   const [plateNumber, setPlate] = useState("");
   const [capacity, setCapacity] = useState("");
-
   const handleSignup = async () => {
     try {
       // Retrieve data from AsyncStorage
-      const [driver, license, vehicleInfo1, vehicleInfo2] = await AsyncStorage.multiGet([
-        'driver',
-        'license',
-        'vehicleInfo1',
-        'vehicleInfo2'
-      ]);
+      const driver = await AsyncStorage.getItem('driver'); // Use a string key instead of an array
   
-      if (!driver[1] || !license[1] || !vehicleInfo1[1] || !vehicleInfo2) {
+      if (!driver) {
         throw new Error("Required data not found in AsyncStorage.");
       }
-
+  
+      // Parse the retrieved data
+      const driverData = JSON.parse(driver);
+  
+      // Validate required fields
       if (!vehicleType || !model || !year || !color || !plateNumber || !capacity) {
         Alert.alert("Validation Error", "All fields are required.");
         return;
       }
-
+  
       const vehicleData = {
         vehicleType,
         model,
@@ -47,27 +45,32 @@ const VehicleInformation2 = () => {
         plateNumber,
         capacity,
       };
-
+  
+      console.log('Vehicle Data:', vehicleData);
+  
       const signupData = {
-        name: JSON.parse(driver[1]).name,  
-        email: JSON.parse(driver[1]).email, 
-        password: JSON.parse(driver[1]).password, 
-        number: JSON.parse(driver[1]).number,  
-        birthday: JSON.parse(driver[1]).birthday,  
-        address: JSON.parse(driver[1]).address, 
-        license: JSON.parse(license[1]),  
-        vehicleInfo1: JSON.parse(vehicleInfo1[1]), 
+        name: driverData.name,
+        email: driverData.email,
+        password: driverData.password,
+        number: driverData.number,
+        birthday: driverData.birthday,
+        address: driverData.address,
         vehicleInfo2: vehicleData,
       };
   
       console.log('Combined Data:', signupData);
   
+      // Send data to the server
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/driver/driver-signup",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driver-signup",
         signupData
       );
+  
       if (response.data.message === "Driver created successfully") {
-        navigation.navigate("Login");
+        navigation.navigate("Documents", {
+          email: driverData.email,
+          name: driverData.name,
+        });
       } else {
         Alert.alert(
           "Signup Failed",
@@ -89,7 +92,7 @@ const VehicleInformation2 = () => {
     <View style={styles.container}>
       <Text style={styles.header}>Vehicle Information</Text>
       <TextInput
-        placeholder="Type of Vehicle"
+        placeholder="Type of Vehicle (Jeep, Tricycle)"
         value={vehicleType}
         onChangeText={setVehicleType}
         style={styles.input}
@@ -141,6 +144,7 @@ const styles = StyleSheet.create({
   header: {
     fontWeight: "700",
     fontSize: 24,
+    paddingVertical: 20
   },
   input: {
     borderBottomWidth: 1,

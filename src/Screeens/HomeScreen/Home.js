@@ -55,7 +55,10 @@ const Home = ({ route }) => {
   const [destinationCords, setDestinationCords] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
-  const [isCopassengerDetailsModalVisible, setIsCoPassengerDetailsModalVisible] = useState(false);
+  const [
+    isCopassengerDetailsModalVisible,
+    setIsCoPassengerDetailsModalVisible,
+  ] = useState(false);
   const [selectedCommuter, setSelectedCommuter] = useState(null);
   const [selectedCoPassenger, setSelectedCoPassenger] = useState(null);
   const [isPickupConfirmed, setIsPickupConfirmed] = useState({});
@@ -71,20 +74,48 @@ const Home = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalArrivedVisible, setArrivedModalVisible] = useState(false);
   const [modalParentVisible, setParentModalsVisible] = useState(false);
-  const [modalSpecialTripArrivalVisible, setSpecialTripModalArrivalVisible] = useState(false);
-  const [modalSharedTripArrivalVisible, setSharedTripModalArrivalVisible] = useState(false);
-  const [modalSpecialTripVisible, setSpecialTripModalsVisible] = useState(false);
-  const [modalSpecialTripDropoffVisible, setSpecialTripDropoffModalVisible] = useState(false);
-  const [modalSpecialTripEndRideVisible, setSpecialTripEndRideModalVisible] = useState(false);
+  const [modalSpecialTripArrivalVisible, setSpecialTripModalArrivalVisible] =
+    useState(false);
+  const [modalSharedTripArrivalVisible, setSharedTripModalArrivalVisible] =
+    useState(false);
+  const [modalSpecialTripVisible, setSpecialTripModalsVisible] =
+    useState(false);
+  const [modalSpecialTripDropoffVisible, setSpecialTripDropoffModalVisible] =
+    useState(false);
+  const [modalSpecialTripEndRideVisible, setSpecialTripEndRideModalVisible] =
+    useState(false);
   const [modalCancelVisible, setCancelModalVisible] = useState(false);
-  const [modalCancelSharedVisible, setCancelSharedModalVisible] = useState(false);
-  const [selectedSpecialTripPassenger, setSelectedSpecialTripPassenger] = useState(null);
+  const [modalCancelSharedVisible, setCancelSharedModalVisible] =
+    useState(false);
+  const [selectedSpecialTripPassenger, setSelectedSpecialTripPassenger] =
+    useState(null);
   const [selectedCopassenger, setSelectedCopassenger] = useState(null);
   const [selectedParent, setSelectedParent] = useState(null);
   const [isParentModalVisible, setParentModalVisible] = useState(false);
   const [isEndRideModalVisible, setEndRideModalVisible] = useState(false);
-
+  const handleMessage = async () => {
+    try {
+      // Retrieve userId from AsyncStorage
+      const userId = await AsyncStorage.getItem("userId");
   
+      if (userId) {
+        // If userId exists, navigate to the Message screen
+        navigation.navigate("Message", { userId });
+        console.log("Navigating to Message screen with userId:", userId);
+      } else {
+        // If userId is missing, show an error
+        console.error("User ID is missing.");
+        Alert.alert("Error", "Unable to send a message to the user.");
+      }
+    } catch (error) {
+      // Handle any error that occurs during AsyncStorage operations
+      console.error("Error retrieving userId from AsyncStorage:", error.message);
+      Alert.alert("Error", "An error occurred while retrieving the user ID.");
+    }
+  };
+  
+  
+
   const openEndRideModal = (parentId) => {
     // Log the booking ID received
     console.log("Booking ID to End Ride:", parentId);
@@ -201,25 +232,42 @@ const Home = ({ route }) => {
       console.error("No copassenger ID available for drop off.");
       return;
     }
+    const updatedStatus = "Dropped off"; // New status to set
+    console.log("Updated status to be sent:", updatedStatus);
 
     try {
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/copassenger/dropoff",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/copassenger/dropoff",
         { copassengerId: selectedCopassenger } // Send the stored copassengerId in the body
       );
 
-      if (response.status === 200 && response.data.status === "ok") {
-        console.log("Drop off confirmed for copassenger:", response.data.data);
-        // Update the state to remove the dropped-off copassenger from the UI
-        setJoinAcceptedSharedBooking((prevBookings) => {
-          return prevBookings.map((booking) => {
-            const updatedCopassengers = booking.copassengers.filter(
-              (copassenger) => copassenger._id !== selectedCopassenger
-            );
-            return { ...booking, copassengers: updatedCopassengers };
-          });
+      if (response.data?.status === "ok") {
+        // Update the local state for pickup confirmation
+        setIsPickupConfirmed((prevState) => {
+          const updatedState = {
+            ...prevState,
+            [selectedCopassenger]: updatedStatus,
+          };
+          console.log("Booking status updated successfully");
+          console.log("New pickup confirmation state:", updatedState);
+          return updatedState; // Return the updated state
         });
 
+        setJoinAcceptedSharedBooking((prevBookings) => {
+          return prevBookings.map((booking) => {
+            if (booking._id === response.data.data._id) {
+              // Update the copassenger's status in the relevant booking
+              const updatedCopassengers = booking.copassengers.map(
+                (copassenger) =>
+                  copassenger._id === selectedCopassenger
+                    ? { ...copassenger, status: "Dropped off" } // Update status to "Arrived"
+                    : copassenger
+              );
+              return { ...booking, copassengers: updatedCopassengers };
+            }
+            return booking;
+          });
+        });
         closeDropoffModal(); // Close the modal after confirming the dropoff
       } else {
         console.error("Failed to complete dropoff:", response.data.message);
@@ -246,7 +294,7 @@ const Home = ({ route }) => {
 
       // Send bookingId in the request payload
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/complete",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/complete",
         { bookingId } // Updated payload to send bookingId
       );
 
@@ -257,6 +305,8 @@ const Home = ({ route }) => {
         setAcceptedSharedBooking((prevBookings) =>
           prevBookings.filter((booking) => booking._id !== bookingId)
         );
+        setDestinationCords(null);
+        setCommuterLocation(null);
       } else {
         console.error("Failed to complete booking:", response.data.message);
       }
@@ -284,24 +334,22 @@ const Home = ({ route }) => {
 
   const handleConfirmArrival = async () => {
     console.log("Current selected copassenger:", selectedCopassenger);
-  
-    // Check if a copassenger is selected
-    console.log("Current selected booking:", selectedCopassenger);
 
-    // Check if a booking is selected
-    if (!selectedParent) {
-      console.error("No booking selected to update status");
+    // Check if a copassenger is selected
+    if (!selectedCopassenger) {
+      console.error("No copassenger selected");
       return;
     }
 
+    // Check if a booking is selected
     try {
       const updatedStatus = "Arrived"; // New status to set
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/arrived?bookingId=${selectedCopassenger}`,
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/copassenger/arrived`,
         {
-          status: updatedStatus,
+          copassengerId: selectedCopassenger, // Send copassengerId in the body
         },
         {
           headers: {
@@ -324,14 +372,21 @@ const Home = ({ route }) => {
           return updatedState; // Return the updated state
         });
 
-        // Also update the status in accepted shared bookings if applicable
-        setJoinAcceptedSharedBooking((prevBookings) =>
-          prevBookings.map((booking) =>
-            booking._id === selectedCopassenger
-              ? { ...booking, status: updatedStatus } // Update the status in the booking
-              : booking
-          )
-        );
+        setJoinAcceptedSharedBooking((prevBookings) => {
+          return prevBookings.map((booking) => {
+            if (booking._id === response.data.data._id) {
+              // Update the copassenger's status in the relevant booking
+              const updatedCopassengers = booking.copassengers.map(
+                (copassenger) =>
+                  copassenger._id === selectedCopassenger
+                    ? { ...copassenger, status: "Arrived" } // Update status to "Arrived"
+                    : copassenger
+              );
+              return { ...booking, copassengers: updatedCopassengers };
+            }
+            return booking;
+          });
+        });
       } else {
         console.error(
           "Failed to update booking status:",
@@ -344,11 +399,11 @@ const Home = ({ route }) => {
         error.response?.data?.message || error.message
       );
     } finally {
-      closeSharedTripArrivalModal();
+      closeArrivedModal();
       console.log("Pickup modal closed.");
     }
   };
-  
+
   const openPickupModal = (copassenger) => {
     console.log("Opening modal for copassenger:", copassenger); // Log the copassenger
     setSelectedCopassenger(copassenger); // Set the selected copassenger directly
@@ -359,25 +414,26 @@ const Home = ({ route }) => {
     setModalVisible(false); // Close the modal without confirming
     setSelectedCopassenger(null); // Clear any selected copassenger
   };
+
   const handleConfirmPickup = async () => {
     console.log("Current selected copassenger:", selectedCopassenger);
-  
+
     // Check if a copassenger is selected
     if (!selectedCopassenger) {
       console.error("No copassenger selected to pickup");
       return;
     }
-  
+
     const updatedStatus = "On board"; // New status to set
     console.log("Updated status to be sent:", updatedStatus);
-  
+
     try {
       // Send a request to update the status to "On board"
+
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/copassenger/onboard",
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/copassenger/onboard`,
         {
-          copassengerId: selectedCopassenger, // Include copassengerId and status
-          status: updatedStatus, // Send the updated status
+          copassengerId: selectedCopassenger, // Send copassengerId in the body
         },
         {
           headers: {
@@ -385,16 +441,36 @@ const Home = ({ route }) => {
           },
         }
       );
-  
+
       console.log("Full response:", response);
-  
-      // Validate the response structure
+
       if (response.data?.status === "ok") {
-        setIsPickupConfirmed((prevState) => ({
-          ...prevState,
-          [selectedCopassenger]: true,
-        }));
-        console.log("Copassenger status updated successfully to 'On board'");
+        // Update the local state for pickup confirmation
+        setIsPickupConfirmed((prevState) => {
+          const updatedState = {
+            ...prevState,
+            [selectedCopassenger]: updatedStatus,
+          };
+          console.log("Booking status updated successfully");
+          console.log("New pickup confirmation state:", updatedState);
+          return updatedState; // Return the updated state
+        });
+
+        setJoinAcceptedSharedBooking((prevBookings) => {
+          return prevBookings.map((booking) => {
+            if (booking._id === response.data.data._id) {
+              // Update the copassenger's status in the relevant booking
+              const updatedCopassengers = booking.copassengers.map(
+                (copassenger) =>
+                  copassenger._id === selectedCopassenger
+                    ? { ...copassenger, status: updatedStatus } // Update status to "Arrived"
+                    : copassenger
+              );
+              return { ...booking, copassengers: updatedCopassengers };
+            }
+            return booking;
+          });
+        });
       } else {
         console.error(
           "Failed to update copassenger status:",
@@ -410,10 +486,9 @@ const Home = ({ route }) => {
       closePickupModal();
     }
   };
-  
 
   //Special Trip
-  
+
   const openSpecialArrivalModal = (special) => {
     console.log("Opening modal for parent:", special); // Log the copassenger
     setSelectedSpecialTripPassenger(special); // Set the selected copassenger directly
@@ -439,7 +514,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/arrived?bookingId=${selectedSpecialTripPassenger}`,
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/arrived?bookingId=${selectedSpecialTripPassenger}`,
         {
           status: updatedStatus,
         },
@@ -472,7 +547,6 @@ const Home = ({ route }) => {
           }
           return prevBooking; // No change if IDs don't match or prevBooking is null
         });
-        
       } else {
         console.error(
           "Failed to update booking status:",
@@ -490,7 +564,6 @@ const Home = ({ route }) => {
     }
   };
 
-  
   const openSpecialPickupModal = (special) => {
     console.log("Opening modal for parent:", special); // Log the copassenger
     setSelectedSpecialTripPassenger(special); // Set the selected copassenger directly
@@ -515,7 +588,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/onboard?bookingId=${selectedSpecialTripPassenger}`,
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/onboard?bookingId=${selectedSpecialTripPassenger}`,
         {
           status: updatedStatus,
         },
@@ -548,7 +621,6 @@ const Home = ({ route }) => {
           }
           return prevBooking; // No change if IDs don't match or prevBooking is null
         });
-        
       } else {
         console.error(
           "Failed to update booking status:",
@@ -566,7 +638,6 @@ const Home = ({ route }) => {
     }
   };
 
-  
   const openSpecialTripDropoffModal = (special) => {
     console.log("Opening modal for copassenger drop off:", special); // Log the copassenger
     setSelectedSpecialTripPassenger(special); // Set the selected copassenger directly
@@ -588,7 +659,7 @@ const Home = ({ route }) => {
     try {
       // Send a request to drop off the selected parent booking
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/dropoff",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/dropoff",
         { bookingId: selectedSpecialTripPassenger } // Send the selected parent booking ID in the body
       );
 
@@ -626,7 +697,6 @@ const Home = ({ route }) => {
   };
 
   const handleCompleteBooking = async () => {
-    
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) throw new Error("No token found");
@@ -641,7 +711,7 @@ const Home = ({ route }) => {
       if (!bookingId) throw new Error("No booking found");
 
       const res = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/complete",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/complete",
         { bookingId },
         {
           headers: {
@@ -676,7 +746,7 @@ const Home = ({ route }) => {
       return [];
     }
   };
-  
+
   // Save rejected bookings to AsyncStorage
   const saveRejectedBooking = async (bookingId) => {
     try {
@@ -687,7 +757,7 @@ const Home = ({ route }) => {
       console.error("Error saving rejected booking:", error);
     }
   };
-  
+
   // Function to handle booking rejection
   const handleReject = async (bookingId) => {
     await saveRejectedBooking(bookingId);
@@ -718,28 +788,31 @@ const Home = ({ route }) => {
     try {
       // Make the API request to cancel the booking
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/cancel",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/cancel",
         { bookingId: selectedSpecialTripPassenger }
       );
-  
+
       if (response.status === 200 && response.data.status === "ok") {
-        setAcceptedSpecialBooking(null)
+        setAcceptedSpecialBooking(null);
         closeSpecialTripCancelModal();
         setDestinationCords(null);
         setCommuterLocation(null);
       } else {
-        Alert.alert("Error", response.data.message || "Failed to cancel booking.");
+        Alert.alert(
+          "Error",
+          response.data.message || "Failed to cancel booking."
+        );
       }
     } catch (error) {
       console.error("Error canceling booking:", error);
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Could not cancel the booking. Please try again."
+        error.response?.data?.message ||
+          "Could not cancel the booking. Please try again."
       );
     }
   };
-  
-  
+
   const openSharedArrivalModal = (parent) => {
     console.log("Opening modal for parent:", parent); // Log the copassenger
     setSelectedParent(parent); // Set the selected copassenger directly
@@ -765,7 +838,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/arrived?bookingId=${selectedParent}`,
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/arrived?bookingId=${selectedParent}`,
         {
           status: updatedStatus,
         },
@@ -815,8 +888,6 @@ const Home = ({ route }) => {
     }
   };
 
-
-
   const openParentPickupModal = (parent) => {
     console.log("Opening modal for parent:", parent); // Log the copassenger
     setSelectedParent(parent); // Set the selected copassenger directly
@@ -842,7 +913,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/onboard?bookingId=${selectedParent}`,
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/onboard?bookingId=${selectedParent}`,
         {
           status: updatedStatus,
         },
@@ -913,7 +984,7 @@ const Home = ({ route }) => {
     try {
       // Send a request to drop off the selected parent booking
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/dropoff",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/dropoff",
         { bookingId: selectedParent } // Send the selected parent booking ID in the body
       );
 
@@ -942,7 +1013,6 @@ const Home = ({ route }) => {
     }
   };
 
-
   const openSharedCancelModal = (shared) => {
     console.log("Opening modal for parent:", shared); // Log the copassenger
     setSelectedParent(shared); // Set the selected copassenger directly
@@ -959,23 +1029,27 @@ const Home = ({ route }) => {
     try {
       // Make the API request to cancel the booking
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/cancel",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/cancel",
         { bookingId: selectedParent }
       );
-  
+
       if (response.status === 200 && response.data.status === "ok") {
-        setAcceptedSharedBooking(null)
+        setAcceptedSharedBooking(null);
         closeSpecialTripCancelModal();
         setDestinationCords(null);
         setCommuterLocation(null);
       } else {
-        Alert.alert("Error", response.data.message || "Failed to cancel booking.");
+        Alert.alert(
+          "Error",
+          response.data.message || "Failed to cancel booking."
+        );
       }
     } catch (error) {
       console.error("Error canceling booking:", error);
       Alert.alert(
         "Error",
-        error.response?.data?.message || "Could not cancel the booking. Please try again."
+        error.response?.data?.message ||
+          "Could not cancel the booking. Please try again."
       );
     }
   };
@@ -1032,7 +1106,6 @@ const Home = ({ route }) => {
     setSelectedCoPassenger(null);
   };
 
-
   const [state, setState] = useState({
     curLoc: {
       latitude: 13.3646,
@@ -1077,12 +1150,12 @@ const Home = ({ route }) => {
         });
         return null; // Return null if location permission is denied
       }
-  
+
       const location = await getCurrentPositionAsync({
         accuracy: LocationAccuracy.High,
       });
       const { latitude, longitude } = location.coords;
-  
+
       // Update the state with the current location
       const curLoc = { latitude, longitude };
       updateState({
@@ -1094,10 +1167,10 @@ const Home = ({ route }) => {
           longitudeDelta: LONGITUDE_DELTA,
         }),
       });
-  
+
       // Call the backend to update the driver's location
       await updateDriverLocation(driverId, curLoc);
-  
+
       return curLoc; // Return the current location
     } catch (error) {
       updateState({
@@ -1108,30 +1181,31 @@ const Home = ({ route }) => {
   };
   const updateDriverLocation = async (driverId, curLoc) => {
     try {
-      const response = await fetch(`https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/update-driver-location`, {
-        method: 'POST', // Change to POST
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          driverId, // Include driverId in the request body
-          latitude: curLoc.latitude,
-          longitude: curLoc.longitude,
-        }),
-      });
-  
+      const response = await fetch(
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/update-driver-location`,
+        {
+          method: "POST", // Change to POST
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            driverId, // Include driverId in the request body
+            latitude: curLoc.latitude,
+            longitude: curLoc.longitude,
+          }),
+        }
+      );
+
       if (!response.ok) {
-        throw new Error('Failed to update driver location');
+        throw new Error("Failed to update driver location");
       }
-  
+
       const data = await response.json();
-      console.log('Driver location updated successfully:', data);
     } catch (error) {
-      console.error('Error updating driver location:', error);
+      console.error("Error updating driver location:", error);
     }
   };
-  
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       getLiveLocation();
@@ -1179,7 +1253,7 @@ const Home = ({ route }) => {
         }
 
         const res = await axios.get(
-          "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/available",
+          "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/available",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -1194,13 +1268,17 @@ const Home = ({ route }) => {
         if (res.data.status === "ok") {
           let bookingsData = res.data.data;
 
-          const rejectedBookingsJSON = await AsyncStorage.getItem("rejectedBookings");
-          const rejectedBookings = rejectedBookingsJSON ? JSON.parse(rejectedBookingsJSON) : [];
-  
+          const rejectedBookingsJSON = await AsyncStorage.getItem(
+            "rejectedBookings"
+          );
+          const rejectedBookings = rejectedBookingsJSON
+            ? JSON.parse(rejectedBookingsJSON)
+            : [];
+
           bookingsData = bookingsData.filter(
             (booking) => !rejectedBookings.includes(booking._id)
           );
-  
+
           if (selectedVehicleType) {
             bookingsData = bookingsData.filter(
               (booking) => booking.vehicleType === selectedVehicleType
@@ -1208,7 +1286,6 @@ const Home = ({ route }) => {
           }
 
           if (bookingsData.length > 0) {
-
             const getAddress = async (latitude, longitude) => {
               const reverseGeocodeUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=pk.eyJ1IjoibWF3aTIxIiwiYSI6ImNseWd6ZGp3aTA1N2IyanM5Ymp4eTdvdzYifQ.0mYPMifHNHONTvY6mBbkvg`;
               const geoResponse = await axios.get(reverseGeocodeUrl);
@@ -1288,7 +1365,7 @@ const Home = ({ route }) => {
         console.log("Booking ID (accepted parentBooking):", bookingId);
 
         const res = await axios.get(
-          `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/joining/shared/${bookingId}`,
+          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/joining/shared/${bookingId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -1303,9 +1380,13 @@ const Home = ({ route }) => {
         if (res.data.status === "ok") {
           let joinData = res.data.data;
 
-          const rejectedBookingsJSON = await AsyncStorage.getItem("rejectedBookings");
-          const rejectedBookings = rejectedBookingsJSON ? JSON.parse(rejectedBookingsJSON) : [];
-  
+          const rejectedBookingsJSON = await AsyncStorage.getItem(
+            "rejectedBookings"
+          );
+          const rejectedBookings = rejectedBookingsJSON
+            ? JSON.parse(rejectedBookingsJSON)
+            : [];
+
           // Filter out rejected bookings
           joinData = joinData.filter(
             (booking) => !rejectedBookings.includes(booking._id)
@@ -1373,10 +1454,10 @@ const Home = ({ route }) => {
             console.log("No join requests found.");
           }
         } else {
-          console.error("Error fetching join requests:", res.data.message);
+         
         }
       } catch (error) {
-        console.error("Error fetching join requests:", error.message);
+       
       }
     };
     if (driverId) {
@@ -1409,7 +1490,7 @@ const Home = ({ route }) => {
   const checkSubscriptionStatus = async (driverId) => {
     try {
       const response = await axios.get(
-        `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/subs/subscription/status/${driverId}`
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/subs/subscription/status/${driverId}`
       );
       setSubscribed(response.data.subscribed);
     } catch (error) {
@@ -1425,6 +1506,8 @@ const Home = ({ route }) => {
       setError("You need an active subscription to go online.");
     }
   };
+
+
   const handleAccept = async (bookingId) => {
     try {
       // Retrieve the token, driverId, and current location
@@ -1453,7 +1536,7 @@ const Home = ({ route }) => {
 
       // Make the POST request to accept the booking
       const res = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/accept",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/accept",
         acceptBooking,
         {
           headers: {
@@ -1466,10 +1549,6 @@ const Home = ({ route }) => {
       if (res.data.status === "ok") {
         const newAcceptedBooking = res.data.data.acceptedBooking;
 
-        // Set parentBookingId to the accepted booking ID
-        newAcceptedBooking.parentBookingId = newAcceptedBooking._id; // Assuming _id is the booking ID
-
-        // Save the bookingId as parentBookingId in AsyncStorage
         await AsyncStorage.setItem("parentBooking", bookingId.toString());
 
         // Log the parentBookingId
@@ -1581,6 +1660,9 @@ const Home = ({ route }) => {
         } else {
           // No discount for other ride types
           newAcceptedBooking.finalFare = newAcceptedBooking.fare;
+            newAcceptedBooking.userId = newAcceptedBooking.user;  
+  await AsyncStorage.setItem("userId", newAcceptedBooking.userId.toString());
+  console.log("UserId saved to AsyncStorage:", newAcceptedBooking.userId);
           setAcceptedSpecialBooking(newAcceptedBooking);
         }
 
@@ -1634,7 +1716,7 @@ const Home = ({ route }) => {
 
       // Make the API request
       const res = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/accept-copassenger",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/accept-copassenger",
         acceptJoin,
         {
           headers: {
@@ -1699,7 +1781,6 @@ const Home = ({ route }) => {
           return { distance: "N/A", time: "N/A" }; // Default values if fetch fails
         };
 
-
         // Reverse geocoding for pickup and destination
         const pickupAddress = await getAddress(
           newAcceptedBooking.pickupLocation.latitude,
@@ -1714,7 +1795,6 @@ const Home = ({ route }) => {
           newAcceptedBooking.pickupLocation,
           newAcceptedBooking.destinationLocation
         );
-
 
         newAcceptedBooking.pickupAddress = pickupAddress;
         newAcceptedBooking.destinationAddress = destinationAddress;
@@ -1733,11 +1813,10 @@ const Home = ({ route }) => {
               copassenger.destinationLocation.longitude
             );
 
-            
-        const { distance, time } = await getDistanceAndTime(
-          copassenger.pickupLocation,
-          copassenger.destinationLocation
-        );
+            const { distance, time } = await getDistanceAndTime(
+              copassenger.pickupLocation,
+              copassenger.destinationLocation
+            );
 
             // Add addresses to co-passenger details
             copassenger.pickupAddress = copassengerPickupAddress;
@@ -1821,20 +1900,19 @@ const Home = ({ route }) => {
             Ride Type: {item.rideType || "Ride type not available"}
           </Text>
           <View>
-          <TouchableOpacity
-            style={styles.bookingButton}
-            onPress={() => handleAccept(item._id)}
-          >
-            <Text style={{ color: "white" }}>Accept Booking</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.bookingButton}
-            onPress={() => handleReject(item._id)}
-          >
-            <Text style={{ color: "white" }}>Reject</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.bookingButton}
+              onPress={() => handleAccept(item._id)}
+            >
+              <Text style={{ color: "white" }}>Accept Booking</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.bookingButton}
+              onPress={() => handleReject(item._id)}
+            >
+              <Text style={{ color: "white" }}>Reject</Text>
+            </TouchableOpacity>
           </View>
-       
         </>
       )}
     </View>
@@ -1885,24 +1963,25 @@ const Home = ({ route }) => {
       {acceptedSpecialBooking && (
         <>
           <Text>{acceptedSpecialBooking.name}</Text>
-  <View style={styles.bookingDetail}>
-          {!isPickupConfirmed[acceptedSpecialBooking._id] ? (
-            <Text style={styles.sharedBookingItemTextLight}>
-              Pickup: {acceptedSpecialBooking.pickupAddress}
-            </Text>
-          ) : (
-            <Text style={styles.sharedBookingItemTextLight}>
-              Destination: {acceptedSpecialBooking.destinationAddress}
-            </Text>
-          )}   
-          <View style={styles.bookingDetails}>
-              <TouchableOpacity onPress={() => openCoPassengerDetailsModal(acceptedSpecialBooking)}>
+          <View style={styles.bookingDetail}>
+            {!isPickupConfirmed[acceptedSpecialBooking._id] ? (
+              <Text style={styles.sharedBookingItemTextLight}>
+                Pickup: {acceptedSpecialBooking.pickupAddress}
+              </Text>
+            ) : (
+              <Text style={styles.sharedBookingItemTextLight}>
+                Destination: {acceptedSpecialBooking.destinationAddress}
+              </Text>
+            )}
+            <View style={styles.bookingDetails}>
+              <TouchableOpacity
+                onPress={() =>openDetailsModal(acceptedSpecialBooking)
+                }
+              >
                 <Text style={styles.sharedBookingItemText}>Details</Text>
               </TouchableOpacity>
+            </View>
           </View>
-
-</View>
-   
 
           <Modal
             visible={isDetailsModalVisible}
@@ -1976,7 +2055,10 @@ const Home = ({ route }) => {
                           </View>
                         </View>
                         <View style={styles.communication}>
-                          <TouchableOpacity style={styles.communicationContainer}>
+                          <TouchableOpacity
+                          onPress={handleMessage}
+                            style={styles.communicationContainer}
+                          >
                             <Text style={styles.communicationText}>
                               <Icon
                                 name="envelope"
@@ -1987,7 +2069,9 @@ const Home = ({ route }) => {
                               Message
                             </Text>
                           </TouchableOpacity>
-                          <TouchableOpacity style={styles.communicationContainer}>
+                          <TouchableOpacity
+                            style={styles.communicationContainer}
+                          >
                             <Text style={styles.communicationText}>
                               <Icon
                                 name="phone"
@@ -2006,49 +2090,79 @@ const Home = ({ route }) => {
               </Animated.View>
             </View>
           </Modal>
-  
+
           <View style={styles.updateStatus}>
-  {distanceToPickup[acceptedSpecialBooking._id] < 4.5 && !isPickupConfirmed[acceptedSpecialBooking._id] && (
-    <View style={styles.arrivalMessageContainer}>
-      <TouchableOpacity style={styles.statusContainer} onPress={() => openSpecialArrivalModal(acceptedSpecialBooking._id)}>
-        <Text style={styles.arrivalMessageText}>Arrived at Pickup</Text>
-      </TouchableOpacity>
-    </View>
-  )}
-  
-  {isPickupConfirmed[acceptedSpecialBooking._id] && acceptedSpecialBooking.status === "Arrived" && (
-    <View style={styles.arrivalMessageContainer}>
-      <TouchableOpacity style={styles.statusContainer} onPress={() => openSpecialPickupModal(acceptedSpecialBooking._id)}>
-        <Text style={styles.arrivalMessageText}>Confirm Pickup</Text>
-      </TouchableOpacity>
-    </View>
-  )}
-  
-  {isPickupConfirmed[acceptedSpecialBooking._id] && 
-   distanceToDropoff[acceptedSpecialBooking._id] < 100.5 && 
-   acceptedSpecialBooking.status === "On board" && (
-    <View style={styles.arrivalMessageContainer}>
-      <TouchableOpacity style={styles.statusContainer} onPress={() => openSpecialTripDropoffModal(acceptedSpecialBooking._id)}>
-        <Text style={styles.arrivalMessageText}>Confirm Drop Off</Text>
-      </TouchableOpacity>
-    </View>
-  )}
-  {acceptedSpecialBooking.status === "Dropped off" ? (
-  <TouchableOpacity  style={styles.endContainer}  onPress={() => openSpecialTripEndRideModal(acceptedSpecialBooking._id)}>
-    <Text style={styles.arrivalMessageText}>End Ride</Text>
-  </TouchableOpacity>
-) : null}
+            {distanceToPickup[acceptedSpecialBooking._id] < 4.5 &&
+              !isPickupConfirmed[acceptedSpecialBooking._id] && (
+                <View style={styles.arrivalMessageContainer}>
+                  <TouchableOpacity
+                    style={styles.statusContainer}
+                    onPress={() =>
+                      openSpecialArrivalModal(acceptedSpecialBooking._id)
+                    }
+                  >
+                    <Text style={styles.arrivalMessageText}>
+                      Arrived at Pickup
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
-  
-  {acceptedSpecialBooking.status !== "Dropped off" && (
-    <View style={ styles.cancelButton}>
-      <TouchableOpacity  onPress={() => openSpecialCancelModal(acceptedSpecialBooking._id)}>
-        <Text style={styles.arrivalMessageText}>Cancel</Text>
-      </TouchableOpacity>
-    </View>
-  )}
-</View>
+            {isPickupConfirmed[acceptedSpecialBooking._id] &&
+              acceptedSpecialBooking.status === "Arrived" && (
+                <View style={styles.arrivalMessageContainer}>
+                  <TouchableOpacity
+                    style={styles.statusContainer}
+                    onPress={() =>
+                      openSpecialPickupModal(acceptedSpecialBooking._id)
+                    }
+                  >
+                    <Text style={styles.arrivalMessageText}>
+                      Confirm Pickup
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
+            {isPickupConfirmed[acceptedSpecialBooking._id] &&
+              distanceToDropoff[acceptedSpecialBooking._id] < 100.5 &&
+              acceptedSpecialBooking.status === "On board" && (
+                <View style={styles.arrivalMessageContainer}>
+                  <TouchableOpacity
+                    style={styles.statusContainer}
+                    onPress={() =>
+                      openSpecialTripDropoffModal(acceptedSpecialBooking._id)
+                    }
+                  >
+                    <Text style={styles.arrivalMessageText}>
+                      Confirm Drop Off
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            {acceptedSpecialBooking.status === "Dropped off" ? (
+              <TouchableOpacity
+                style={styles.endContainer}
+                onPress={() =>
+                  openSpecialTripEndRideModal(acceptedSpecialBooking._id)
+                }
+              >
+                <Text style={styles.arrivalMessageText}>End Ride</Text>
+              </TouchableOpacity>
+            ) : null}
+
+            {acceptedSpecialBooking.status !== "Dropped off" && (
+              <View style={styles.cancelButton}>
+                <TouchableOpacity
+                  onPress={() =>
+                    openSpecialCancelModal(acceptedSpecialBooking._id)
+                  }
+                >
+                  <Text style={styles.arrivalMessageText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
 
           <Modal
             animationType="slide"
@@ -2060,7 +2174,8 @@ const Home = ({ route }) => {
               <View style={styles.modalContainer}>
                 <Text style={styles.modalTitle}>Confirm Arrival Parent</Text>
                 <Text style={styles.modalMessage}>
-                  Are you sure you want to confirm your arrival at the pickup location?
+                  Are you sure you want to confirm your arrival at the pickup
+                  location?
                 </Text>
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
@@ -2110,7 +2225,6 @@ const Home = ({ route }) => {
             </View>
           </Modal>
 
-         
           <Modal
             animationType="slide"
             transparent={true}
@@ -2121,7 +2235,8 @@ const Home = ({ route }) => {
               <View style={styles.modalContainer}>
                 <Text style={styles.modalTitle}>Confirm Pickup Parent</Text>
                 <Text style={styles.modalMessage}>
-                  Are you sure you want to confirm your pickup at the pickup location?
+                  Are you sure you want to confirm your pickup at the pickup
+                  location?
                 </Text>
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
@@ -2174,10 +2289,7 @@ const Home = ({ route }) => {
             </View>
           </Modal>
 
-         
-
-
-<Modal
+          <Modal
             visible={modalSpecialTripEndRideVisible}
             transparent={true}
             animationType="slide"
@@ -2187,7 +2299,8 @@ const Home = ({ route }) => {
               <View style={styles.modalContainer}>
                 <Text style={styles.modalTitle}>End Special Trip</Text>
                 <Text style={styles.modalMessage}>
-                  Are you sure you want to end this special trip? This will complete the booking.
+                  Are you sure you want to end this special trip? This will
+                  complete the booking.
                 </Text>
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
@@ -2209,9 +2322,6 @@ const Home = ({ route }) => {
               </View>
             </View>
           </Modal>
-
-  
-     
         </>
       )}
     </View>
@@ -2221,195 +2331,207 @@ const Home = ({ route }) => {
     <View style={styles.sharedRideContent}>
       <View style={styles.sharedBookingItem}>
         <Text style={styles.sharedBookingItemText}>{item.name}</Text>
-<View style={styles.bookingDetail}>
-        {!isPickupConfirmed[item._id] ? (
-          <Text style={styles.sharedBookingItemTextLight}>
-            Pickup: {item.pickupAddress}
-          </Text>
-        ) : (
-          <Text style={styles.sharedBookingItemTextLight}>
-            Destination: {item.destinationAddress}
-          </Text>
-        )}
-        <View style={styles.bookingDetails}>
-        {console.log("Current booking status:", item.status)}
+        <View style={styles.bookingDetail}>
 
-        {item.status === "Dropped off" ? (
-          <Text style={styles.sharedBookingItemText}>Dropped Off</Text>
-        ) : (
-          <TouchableOpacity onPress={() => openDetailsModal(item)}>
-            <Text style={styles.sharedBookingItemText}>Details</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-</View>
- <Modal
-        visible={isDetailsModalVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={closeDetailsModal}
-      >
-        <View style={styles.modalBackdrop}>
-          <Animated.View
-            style={[
-              styles.detailsModalOverlay,
-              { transform: [{ translateX }] },
-            ]}
-          >
-            <View style={styles.detailsModalContainer}>
-              <View style={styles.detailsModalContent}>
-                <TouchableOpacity
-                  onPress={closeDetailsModal}
-                  style={styles.closeDetailsButton}
-                >
-                  <Icon
-                    name="times"
-                    size={18}
-                    color="#000"
-                    style={styles.closeIcon}
-                  />
-                </TouchableOpacity>
-                <View style={styles.bookingDetailsContainer}>
-                  <Text style={styles.bookingDetailsHeader}>
-                    Booking Details
-                  </Text>
-                </View>
-                {selectedCommuter && (
-                  <View style={styles.bookingContainer}>
-                    <View style={styles.bookingInfo}>
-                      <View style={styles.circle} />
-                      <View style={styles.commuterInfo}>
-                        <Text style={styles.commuterinfoText}>
-                          {selectedCommuter.name}
-                        </Text>
-                        <Text style={styles.commuterinfoText}>
-                          {selectedCommuter.status}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.location}>
-                      <View style={styles.pickupLocation}>
-                        <Text style={styles.locationText}>Pickup:</Text>
-                        <Text style={styles.locationText}>
-                          {selectedCommuter.pickupAddress}
-                        </Text>
-                      </View>
-                      <View style={styles.destinationLocation}>
-                        <Text style={styles.locationText}>Drop-off:</Text>
-                        <Text style={styles.locationText}>
-                          {selectedCommuter.destinationAddress}
-                        </Text>
-                      </View>
-                    </View>
-                    <View>
-                      <View style={styles.fares}>
-                        <Text style={styles.fareText}>
-                          Fare: {selectedCommuter.fare}
-                        </Text>
+          {!isPickupConfirmed[item._id] ? (
+            <Text style={styles.sharedBookingItemTextLight}>
+              Pickup: {item.pickupAddress}
+            </Text>
+          ) : (
+            <Text style={styles.sharedBookingItemTextLight}>
+              Destination: {item.destinationAddress}
+            </Text>
+          )}
 
-                        <Text style={styles.fareText}>
-                          Est. Time: {selectedCommuter.time}
-                        </Text>
-                        <Text style={styles.fareText}>
-                          Distance: {selectedCommuter.distance}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.communication}>
-                      <TouchableOpacity style={styles.communicationContainer}>
-                        <Text style={styles.communicationText}>
-                          <Icon
-                            name="envelope"
-                            size={18}
-                            color="#000"
-                            style={styles.communicationIcon}
-                          />{" "}
-                          Message
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.communicationContainer}>
-                        <Text style={styles.communicationText}>
-                          <Icon
-                            name="phone"
-                            size={18}
-                            color="#000"
-                            style={styles.communicationIcon}
-                          />{" "}
-                          Call
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+          <View style={styles.bookingDetails}>
+            {item.status === "Dropped off" ? (
+              <Text style={styles.sharedBookingItemText}>Dropped Off</Text>
+            ) : (
+              <TouchableOpacity onPress={() => openDetailsModal(item)}>
+                <Text style={styles.sharedBookingItemText}>Details</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+        <Modal
+          visible={isDetailsModalVisible}
+          transparent={true}
+          animationType="none"
+          onRequestClose={closeDetailsModal}
+        >
+          <View style={styles.modalBackdrop}>
+            <Animated.View
+              style={[
+                styles.detailsModalOverlay,
+                { transform: [{ translateX }] },
+              ]}
+            >
+              <View style={styles.detailsModalContainer}>
+                <View style={styles.detailsModalContent}>
+                  <TouchableOpacity
+                    onPress={closeDetailsModal}
+                    style={styles.closeDetailsButton}
+                  >
+                    <Icon
+                      name="times"
+                      size={18}
+                      color="#000"
+                      style={styles.closeIcon}
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.bookingDetailsContainer}>
+                    <Text style={styles.bookingDetailsHeader}>
+                      Booking Details
+                    </Text>
                   </View>
-                )}
+                  {selectedCommuter && (
+                    <View style={styles.bookingContainer}>
+                      <View style={styles.bookingInfo}>
+                        <View style={styles.circle} />
+                        <View style={styles.commuterInfo}>
+                          <Text style={styles.commuterinfoText}>
+                            {selectedCommuter.name}
+                          </Text>
+                          <Text style={styles.commuterinfoText}>
+                            {selectedCommuter.status}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.location}>
+                        <View style={styles.pickupLocation}>
+                          <Text style={styles.locationText}>Pickup:</Text>
+                          <Text style={styles.locationText}>
+                            {selectedCommuter.pickupAddress}
+                          </Text>
+                        </View>
+                        <View style={styles.destinationLocation}>
+                          <Text style={styles.locationText}>Drop-off:</Text>
+                          <Text style={styles.locationText}>
+                            {selectedCommuter.destinationAddress}
+                          </Text>
+                        </View>
+                      </View>
+                      <View>
+                        <View style={styles.fares}>
+                          <Text style={styles.fareText}>
+                            Fare: {selectedCommuter.fare}
+                          </Text>
+
+                          <Text style={styles.fareText}>
+                            Est. Time: {selectedCommuter.time}
+                          </Text>
+                          <Text style={styles.fareText}>
+                            Distance: {selectedCommuter.distance}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.communication}>
+                        <TouchableOpacity style={styles.communicationContainer}>
+                          <Text style={styles.communicationText}>
+                            <Icon
+                              name="envelope"
+                              size={18}
+                              color="#000"
+                              style={styles.communicationIcon}
+                            />{" "}
+                            Message
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.communicationContainer}>
+                          <Text style={styles.communicationText}>
+                            <Icon
+                              name="phone"
+                              size={18}
+                              color="#000"
+                              style={styles.communicationIcon}
+                            />{" "}
+                            Call
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </View>
               </View>
-            </View>
-          </Animated.View>
-        </View>
-      </Modal>
-      <View style={styles.updateStatus}>
-          {distanceToPickup[item._id] && distanceToPickup[item._id] < 4.5 && !isPickupConfirmed[item._id] && (
-            <View style={styles.arrivalMessageContainer}>
-              <TouchableOpacity style={styles.statusContainer} onPress={() => openArrivedModal(item._id)}>
-                <Text style={styles.arrivalMessageText}>Arrived at Pickup</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            </Animated.View>
+          </View>
+        </Modal>
 
-          {isPickupConfirmed[item._id] && item.status === "Arrived" && (
-            <View style={styles.arrivalMessageContainer}>
-              <TouchableOpacity style={styles.statusContainer} onPress={() => openParentPickupModal(item._id)}>
-                <Text style={styles.arrivalMessageText}>Confirm Pickup</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+        <View style={styles.updateStatus}>
+  { distanceToPickup[item._id] < 4.5 && !isPickupConfirmed[item._id] && (
+    <View style={styles.arrivalMessageContainer}>
+      <TouchableOpacity
+        style={styles.statusContainer}
+        onPress={() => openSharedArrivalModal(item._id)}
+      >
+        <Text style={styles.arrivalMessageText}>Arrived at Pickup</Text>
+      </TouchableOpacity>
+    </View>
+  )}
 
-          {isPickupConfirmed[item._id] &&  distanceToDropoff[item._id] < 100.5 && item.status === "On board" && (
-            <View style={styles.arrivalMessageContainer}>
-            <TouchableOpacity style={styles.statusContainer} onPress={() => openParentDropoffModal(item._id)}>
-              <Text style={styles.arrivalMessageText}>Confirm Drop Off</Text>
-            </TouchableOpacity>
-            </View>
-          )}
+  {isPickupConfirmed[item._id] && item.status === "Arrived" && (
+    <View style={styles.arrivalMessageContainer}>
+      <TouchableOpacity
+        style={styles.statusContainer}
+        onPress={() => openParentPickupModal(item._id)}
+      >
+        <Text style={styles.arrivalMessageText}>Confirm Pickup</Text>
+      </TouchableOpacity>
+    </View>
+  )}
 
-          {item.status !== "Dropped off" && (
-            <View style={styles.cancelButton}>
-              <TouchableOpacity onPress={() => openSharedCancelModal(item._id)}>
-                <Text style={styles.arrivalMessageText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+  {isPickupConfirmed[item._id] && distanceToDropoff[item._id] < 100.5 && item.status === "On board" && (
+    <View style={styles.arrivalMessageContainer}>
+      <TouchableOpacity
+        style={styles.statusContainer}
+        onPress={() => openParentDropoffModal(item._id)}
+      >
+        <Text style={styles.arrivalMessageText}>Confirm Drop Off</Text>
+      </TouchableOpacity>
+    </View>
+  )}
+
+  {item.status !== "Dropped off" && (
+    <View style={styles.cancelButton}>
+      <TouchableOpacity onPress={() => openSharedCancelModal(item._id)}>
+        <Text style={styles.arrivalMessageText}>Cancel</Text>
+      </TouchableOpacity>
+    </View>
+  )}
+</View>
+
 
         <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalSharedTripArrivalVisible}
-            onRequestClose={closeSharedTripArrivalModal}
-          >
-            <View style={styles.modalConfirm}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Confirm Arrival Parent</Text>
-                <Text style={styles.modalMessage}>
-                  Are you sure you want to confirm your arrival at the pickup location?
-                </Text>
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    onPress={handleConfirmSharedTripArrival}
-                    style={styles.confirmButton}
-                  >
-                    <Text style={styles.arrivalMessageText}>Yes</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={closeSharedTripArrivalModal}
-                    style={styles.confirmButton}
-                  >
-                    <Text style={styles.arrivalMessageText}>No</Text>
-                  </TouchableOpacity>
-                </View>
+          animationType="slide"
+          transparent={true}
+          visible={modalSharedTripArrivalVisible}
+          onRequestClose={closeSharedTripArrivalModal}
+        >
+          <View style={styles.modalConfirm}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Confirm Arrival Parent</Text>
+              <Text style={styles.modalMessage}>
+                Are you sure you want to confirm your arrival at the pickup
+                location?
+              </Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  onPress={handleConfirmSharedTripArrival}
+                  style={styles.confirmButton}
+                >
+                  <Text style={styles.arrivalMessageText}>Yes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={closeSharedTripArrivalModal}
+                  style={styles.confirmButton}
+                >
+                  <Text style={styles.arrivalMessageText}>No</Text>
+                </TouchableOpacity>
               </View>
             </View>
-          </Modal>
+          </View>
+        </Modal>
 
         <Modal
           animationType="slide"
@@ -2441,8 +2563,8 @@ const Home = ({ route }) => {
             </View>
           </View>
         </Modal>
-
       </View>
+
       <Modal
         visible={isParentModalVisible}
         transparent={true}
@@ -2458,8 +2580,8 @@ const Home = ({ route }) => {
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 onPress={() => {
-                  confirmParentDropOff(selectedParent._id); // Pass the selected copassenger ID
-                  closeParentDropoffModal(); // Close the modal after confirmation
+                  confirmParentDropOff(selectedParent._id);
+                  closeParentDropoffModal(); 
                 }}
                 style={styles.confirmButton}
               >
@@ -2475,37 +2597,36 @@ const Home = ({ route }) => {
           </View>
         </View>
       </Modal>
-      <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalCancelSharedVisible}
-            onRequestClose={closeSharedTripCancelModal}
-          >
-            <View style={styles.modalConfirm}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Confirm Cancel Booking</Text>
-                <Text style={styles.modalMessage}>
-                  Are you sure you want to cancel?
-                </Text>
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    onPress={handleCancelSharedBooking}
-                    style={styles.confirmButton}
-                  >
-                    <Text style={styles.arrivalMessageText}>Yes</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={closeSharedTripCancelModal}
-                    style={styles.confirmButton}
-                  >
-                    <Text style={styles.arrivalMessageText}>No</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
 
-         
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalCancelSharedVisible}
+        onRequestClose={closeSharedTripCancelModal}
+      >
+        <View style={styles.modalConfirm}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Confirm Cancel Booking</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to cancel?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={handleCancelSharedBooking}
+                style={styles.confirmButton}
+              >
+                <Text style={styles.arrivalMessageText}>Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={closeSharedTripCancelModal}
+                style={styles.confirmButton}
+              >
+                <Text style={styles.arrivalMessageText}>No</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 
@@ -2513,152 +2634,165 @@ const Home = ({ route }) => {
     <View style={styles.sharedRideContent}>
       <View style={styles.sharedBookingItem}>
         <Text style={styles.sharedBookingItemText}>{item.name}</Text>
-<View style={styles.bookingDetail}>
-        {!isPickupConfirmed[item._id] ? (
-          <Text style={styles.sharedBookingItemTextLight}>
-            Pickup: {item.pickupAddress}
-          </Text>
-        ) : (
-          <Text style={styles.sharedBookingItemTextLight}>
-            Destination: {item.destinationAddress}
-          </Text>
-        )}
-        
-      <View style={styles.bookingDetails}>
-        <TouchableOpacity onPress={() => openDetailsModal(item)}>
-          <Text style={styles.sharedBookingItemText}>Details</Text>
-        </TouchableOpacity>
-      </View>
-      </View>
-      <Modal
-        visible={isCopassengerDetailsModalVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={closeCoPassengerDetailsModal}
-      >
-        <View style={styles.modalBackdrop}>
-          <Animated.View
-            style={[
-              styles.detailsModalOverlay,
-              { transform: [{ translateX }] },
-            ]}
-          >
-            <View style={styles.detailsModalContainer}>
-              <View style={styles.detailsModalContent}>
-                <TouchableOpacity
-                  onPress={closeCoPassengerDetailsModal}
-                  style={styles.closeDetailsButton}
-                >
-                  <Icon
-                    name="times"
-                    size={18}
-                    color="#000"
-                    style={styles.closeIcon}
-                  />
-                </TouchableOpacity>
-                <View style={styles.bookingDetailsContainer}>
-                  <Text style={styles.bookingDetailsHeader}>
-                    Booking Details
-                  </Text>
-                </View>
-                {selectedCoPassenger && (
-                  <View style={styles.bookingContainer}>
-                    <View style={styles.bookingInfo}>
-                      <View style={styles.circle} />
-                      <View style={styles.commuterInfo}>
-                        <Text style={styles.commuterinfoText}>
-                          {selectedCoPassenger.name}
-                        </Text>
-                        <Text style={styles.commuterinfoText}>
-                          {selectedCoPassenger.status}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.location}>
-                      <View style={styles.pickupLocation}>
-                        <Text style={styles.locationText}>Pickup:</Text>
-                        <Text style={styles.locationText}>
-                          {selectedCoPassenger.pickupAddress}
-                        </Text>
-                      </View>
-                      <View style={styles.destinationLocation}>
-                        <Text style={styles.locationText}>Drop-off:</Text>
-                        <Text style={styles.locationText}>
-                          {selectedCoPassenger.destinationAddress}
-                        </Text>
-                      </View>
-                    </View>
-                    <View>
-                      <View style={styles.fares}>
-                        <Text style={styles.fareText}>
-                          Fare: {selectedCoPassenger.fare}
-                        </Text>
+        <View style={styles.bookingDetail}>
+          {!isPickupConfirmed[item._id] ? (
+            <Text style={styles.sharedBookingItemTextLight}>
+              Pickup: {item.pickupAddress}
+            </Text>
+          ) : (
+            <Text style={styles.sharedBookingItemTextLight}>
+              Destination: {item.destinationAddress}
+            </Text>
+          )}
 
-                        <Text style={styles.fareText}>
-                          Est. Time: {selectedCoPassenger.time}
-                        </Text>
-                        <Text style={styles.fareText}>
-                          Distance: {selectedCoPassenger.distance || "NA"}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.communication}>
-                      <TouchableOpacity style={styles.communicationContainer}>
-                        <Text style={styles.communicationText}>
-                          <Icon
-                            name="envelope"
-                            size={18}
-                            color="#000"
-                            style={styles.communicationIcon}
-                          />{" "}
-                          Message
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.communicationContainer}>
-                        <Text style={styles.communicationText}>
-                          <Icon
-                            name="phone"
-                            size={18}
-                            color="#000"
-                            style={styles.communicationIcon}
-                          />{" "}
-                          Call
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </View>
-            </View>
-          </Animated.View>
-        </View>
-      </Modal>
-      <View style={styles.updateStatus}>
-        {distanceToPickup[item._id] < 4.5 && !isPickupConfirmed[item._id] && (
-          <View style={styles.arrivalMessageContainer}>
-            {/* Show "Arrived at Pickup" button */}
-            <TouchableOpacity style={styles.statusContainer} onPress={() => openSharedArrivalModal(item._id)}>
-              <Text style={styles.arrivalMessageText}>Arrived at Pickup</Text>
+          <View style={styles.bookingDetails}>
+            <TouchableOpacity onPress={() => openDetailsModal(item)}>
+              <Text style={styles.sharedBookingItemText}>Details</Text>
             </TouchableOpacity>
           </View>
-        )}
-      
+        </View>
+        <Modal
+          visible={isCopassengerDetailsModalVisible}
+          transparent={true}
+          animationType="none"
+          onRequestClose={closeCoPassengerDetailsModal}
+        >
+          <View style={styles.modalBackdrop}>
+            <Animated.View
+              style={[
+                styles.detailsModalOverlay,
+                { transform: [{ translateX }] },
+              ]}
+            >
+              <View style={styles.detailsModalContainer}>
+                <View style={styles.detailsModalContent}>
+                  <TouchableOpacity
+                    onPress={closeCoPassengerDetailsModal}
+                    style={styles.closeDetailsButton}
+                  >
+                    <Icon
+                      name="times"
+                      size={18}
+                      color="#000"
+                      style={styles.closeIcon}
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.bookingDetailsContainer}>
+                    <Text style={styles.bookingDetailsHeader}>
+                      Booking Details
+                    </Text>
+                  </View>
+                  {selectedCoPassenger && (
+                    <View style={styles.bookingContainer}>
+                      <View style={styles.bookingInfo}>
+                        <View style={styles.circle} />
+                        <View style={styles.commuterInfo}>
+                          <Text style={styles.commuterinfoText}>
+                            {selectedCoPassenger.name}
+                          </Text>
+                          <Text style={styles.commuterinfoText}>
+                            {selectedCoPassenger.status}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.location}>
+                        <View style={styles.pickupLocation}>
+                          <Text style={styles.locationText}>Pickup:</Text>
+                          <Text style={styles.locationText}>
+                            {selectedCoPassenger.pickupAddress}
+                          </Text>
+                        </View>
+                        <View style={styles.destinationLocation}>
+                          <Text style={styles.locationText}>Drop-off:</Text>
+                          <Text style={styles.locationText}>
+                            {selectedCoPassenger.destinationAddress}
+                          </Text>
+                        </View>
+                      </View>
+                      <View>
+                        <View style={styles.fares}>
+                          <Text style={styles.fareText}>
+                            Fare: {selectedCoPassenger.fare}
+                          </Text>
+
+                          <Text style={styles.fareText}>
+                            Est. Time: {selectedCoPassenger.time}
+                          </Text>
+                          <Text style={styles.fareText}>
+                            Distance: {selectedCoPassenger.distance || "NA"}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.communication}>
+                        <TouchableOpacity style={styles.communicationContainer}>
+                          <Text style={styles.communicationText}>
+                            <Icon
+                              name="envelope"
+                              size={18}
+                              color="#000"
+                              style={styles.communicationIcon}
+                            />{" "}
+                            Message
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.communicationContainer}>
+                          <Text style={styles.communicationText}>
+                            <Icon
+                              name="phone"
+                              size={18}
+                              color="#000"
+                              style={styles.communicationIcon}
+                            />{" "}
+                            Call
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </Animated.View>
+          </View>
+        </Modal>
+        <View style={styles.updateStatus}>
+          {distanceToPickup[item._id] < 4.5 && !isPickupConfirmed[item._id] && (
+            <View style={styles.arrivalMessageContainer}>
+              {/* Show "Arrived at Pickup" button */}
+              <TouchableOpacity
+                style={styles.statusContainer}
+                onPress={() => openArrivedModal(item._id)}
+              >
+                <Text style={styles.arrivalMessageText}>Arrived at Pickup</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {isPickupConfirmed[item._id] && item.status === "Arrived" && (
             <View style={styles.arrivalMessageContainer}>
-              <TouchableOpacity style={styles.statusContainer} onPress={() => openPickupModal(item._id)}>
+              <TouchableOpacity
+                style={styles.statusContainer}
+                onPress={() => openPickupModal(item._id)}
+              >
                 <Text style={styles.arrivalMessageText}>Confirm Pickup</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {isPickupConfirmed[item._id] &&  distanceToDropoff[item._id] < 100.5 && item.status === "On board" && (
-            <View style={styles.arrivalMessageContainer}>
-            <TouchableOpacity style={styles.statusContainer} onPress={() => openDropoffModal(item._id)}>
-              <Text style={styles.arrivalMessageText}>Confirm Drop Off</Text>
-            </TouchableOpacity>
-            </View>
-          )}
+          {isPickupConfirmed[item._id] &&
+            distanceToDropoff[item._id] < 100.5 &&
+            item.status === "On board" && (
+              <View style={styles.arrivalMessageContainer}>
+                <TouchableOpacity
+                  style={styles.statusContainer}
+                  onPress={() => openDropoffModal(item._id)}
+                >
+                  <Text style={styles.arrivalMessageText}>
+                    Confirm Drop Off
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
           {item.status !== "Dropped off" && (
             <View style={styles.cancelButton}>
@@ -2667,7 +2801,7 @@ const Home = ({ route }) => {
               </TouchableOpacity>
             </View>
           )}
-          </View>
+        </View>
 
         {/* Modal for confirming arrival at pickup */}
         <Modal
@@ -2764,7 +2898,6 @@ const Home = ({ route }) => {
           </View>
         </View>
       </Modal>
-
     </View>
   );
 
@@ -2837,77 +2970,86 @@ const Home = ({ route }) => {
         )}
 
         {acceptedSpecialBooking && (
-  <React.Fragment>
-    {!isPickupConfirmed[acceptedSpecialBooking._id] && (
-      <MapViewDirections
-        key={`direction-pickup-${acceptedSpecialBooking._id}`}
-        origin={curLoc} // Start from current location
-        destination={acceptedSpecialBooking.pickupLocation} // End at pickup location
-        apikey={GOOGLE_MAP_KEY}
-        strokeWidth={6}
-        strokeColor="red" // Color for the route from curLoc to pickupLocation
-        optimizeWaypoints={true}
-        onReady={(result) => {
-          setDistanceToPickup((prevDistances) => ({
-            ...prevDistances,
-            [acceptedSpecialBooking._id]: result.distance, // Store distance for this booking
-          }));
-          fetchTime(result.duration);
-          mapRef.current.fitToCoordinates(
-            [curLoc, acceptedSpecialBooking.pickupLocation],
-            {
-              edgePadding: {
-                right: 30,
-                bottom: 300,
-                left: 30,
-                top: 100,
-              },
-            }
-          );
-        }}
-      />
-    )}
+          <React.Fragment>
+            {!isPickupConfirmed[acceptedSpecialBooking._id] && (
+              <MapViewDirections
+                key={`direction-pickup-${acceptedSpecialBooking._id}`}
+                origin={curLoc} // Start from current location
+                destination={acceptedSpecialBooking.pickupLocation} // End at pickup location
+                apikey={GOOGLE_MAP_KEY}
+                strokeWidth={6}
+                strokeColor="red" // Color for the route from curLoc to pickupLocation
+                optimizeWaypoints={true}
+                onReady={(result) => {
+                  setDistanceToPickup((prevDistances) => ({
+                    ...prevDistances,
+                    [acceptedSpecialBooking._id]: result.distance, // Store distance for this booking
+                  }));
+                  fetchTime(result.duration);
+                  mapRef.current.fitToCoordinates(
+                    [curLoc, acceptedSpecialBooking.pickupLocation],
+                    {
+                      edgePadding: {
+                        right: 30,
+                        bottom: 300,
+                        left: 30,
+                        top: 100,
+                      },
+                    }
+                  );
+                }}
+              />
+            )}
 
-    {/* Show directions to destination if pickup is confirmed */}
-    {isPickupConfirmed[acceptedSpecialBooking._id] && (
-      <MapViewDirections
-        key={`direction-destination-${acceptedSpecialBooking._id}`}
-        origin={acceptedSpecialBooking.pickupLocation} // Start from pickup location
-        destination={acceptedSpecialBooking.destinationLocation} // End at destination
-        apikey={GOOGLE_MAP_KEY}
-        strokeWidth={6}
-        strokeColor="black" // Color for the route from pickupLocation to destinationLocation
-        optimizeWaypoints={true}
-        onReady={(result) => {
-          setDistanceToDropoff((prevDistances) => ({
-            ...prevDistances,
-            [acceptedSpecialBooking._id]: result.distance, // Store distance for this booking
-          }));
-          fetchTime(result.duration);
-          mapRef.current.fitToCoordinates(
-            [acceptedSpecialBooking.pickupLocation, acceptedSpecialBooking.destinationLocation],
-            {
-              edgePadding: {
-                right: 30,
-                bottom: 300,
-                left: 30,
-                top: 100,
-              },
-            }
-          );
-        }}
-      />
-    )}
+            {/* Show directions to destination if pickup is confirmed */}
+            {isPickupConfirmed[acceptedSpecialBooking._id] && (
+              <MapViewDirections
+                key={`direction-destination-${acceptedSpecialBooking._id}`}
+                origin={acceptedSpecialBooking.pickupLocation} // Start from pickup location
+                destination={acceptedSpecialBooking.destinationLocation} // End at destination
+                apikey={GOOGLE_MAP_KEY}
+                strokeWidth={6}
+                strokeColor="black" // Color for the route from pickupLocation to destinationLocation
+                optimizeWaypoints={true}
+                onReady={(result) => {
+                  setDistanceToDropoff((prevDistances) => ({
+                    ...prevDistances,
+                    [acceptedSpecialBooking._id]: result.distance, // Store distance for this booking
+                  }));
+                  fetchTime(result.duration);
+                  mapRef.current.fitToCoordinates(
+                    [
+                      acceptedSpecialBooking.pickupLocation,
+                      acceptedSpecialBooking.destinationLocation,
+                    ],
+                    {
+                      edgePadding: {
+                        right: 30,
+                        bottom: 300,
+                        left: 30,
+                        top: 100,
+                      },
+                    }
+                  );
+                }}
+              />
+            )}
 
-    {/* Markers for current location, pickup, and destination */}
-    <Marker coordinate={curLoc} title="Current Location" />
-    <Marker coordinate={acceptedSpecialBooking.pickupLocation} title="Pickup Location" />
+            {/* Markers for current location, pickup, and destination */}
+            <Marker coordinate={curLoc} title="Current Location" />
+            <Marker
+              coordinate={acceptedSpecialBooking.pickupLocation}
+              title="Pickup Location"
+            />
 
-    {isPickupConfirmed[acceptedSpecialBooking._id] && (
-      <Marker coordinate={acceptedSpecialBooking.destinationLocation} title="Destination" />
-    )}
-  </React.Fragment>
-)}
+            {isPickupConfirmed[acceptedSpecialBooking._id] && (
+              <Marker
+                coordinate={acceptedSpecialBooking.destinationLocation}
+                title="Destination"
+              />
+            )}
+          </React.Fragment>
+        )}
 
         {acceptedSharedBooking.map((booking) => (
           <React.Fragment key={booking.id}>
@@ -2942,7 +3084,6 @@ const Home = ({ route }) => {
               />
             )}
 
-            {/* Show directions to destination if pickup is confirmed */}
             {isPickupConfirmed[booking._id] && (
               <MapViewDirections
                 key={`direction-destination-${booking.id}`}
@@ -3195,7 +3336,6 @@ const Home = ({ route }) => {
                     Are you sure you want to end the ride?
                   </Text>
                   <View style={styles.modalButtons}>
-                   
                     <TouchableOpacity
                       onPress={endRide}
                       style={styles.confirmButton}
@@ -3353,52 +3493,52 @@ const Home = ({ route }) => {
 
 const styles = StyleSheet.create({
   arrivalMessageText: {
-    color: 'white'
+    color: "white",
   },
   updateStatus: {
     display: "flex",
     flexDirection: "row",
-    justifyContent: 'space-between'
+    justifyContent: "space-between",
   },
   statusContainer: {
     backgroundColor: "black",
     padding: 10,
     width: "130%",
-    alignItems: 'center',
+    alignItems: "center",
     borderTopEndRadius: 10,
-    borderTopStartRadius:  10,
-    borderBottomEndRadius:  10,
-    borderBottomStartRadius:  10,
+    borderTopStartRadius: 10,
+    borderBottomEndRadius: 10,
+    borderBottomStartRadius: 10,
   },
   cancelButton: {
     backgroundColor: "black",
     padding: 10,
-   width: "45%",
-       alignItems: 'center',    
-       borderTopEndRadius:  10,
-       borderTopStartRadius:  10,
-       borderBottomEndRadius:  10,
-       borderBottomStartRadius:  10,
+    width: "45%",
+    alignItems: "center",
+    borderTopEndRadius: 10,
+    borderTopStartRadius: 10,
+    borderBottomEndRadius: 10,
+    borderBottomStartRadius: 10,
   },
   confirmButton: {
     backgroundColor: "black",
     padding: 10,
-   width: "20%",
-       alignItems: 'center',    
-       borderTopEndRadius:  10,
-       borderTopStartRadius:  10,
-       borderBottomEndRadius:  10,
-       borderBottomStartRadius:  10,
+    width: "20%",
+    alignItems: "center",
+    borderTopEndRadius: 10,
+    borderTopStartRadius: 10,
+    borderBottomEndRadius: 10,
+    borderBottomStartRadius: 10,
   },
   endContainer: {
     backgroundColor: "black",
     padding: 10,
     width: "100%",
-    alignItems: 'center',
+    alignItems: "center",
     borderTopEndRadius: 10,
-    borderTopStartRadius:  10,
-    borderBottomEndRadius:  10,
-    borderBottomStartRadius:  10,
+    borderTopStartRadius: 10,
+    borderBottomEndRadius: 10,
+    borderBottomStartRadius: 10,
   },
 
   detailsModalOverlay: {
@@ -3539,20 +3679,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   bookingDetails: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   bookingDetail: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom : 20,
-    width: '100%',
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+    width: "100%",
   },
   bookingDetailsContainer: {
-    alignItems: "center"
-  }
-  
-  ,bookingDetailsHeader: {
+    alignItems: "center",
+  },
+
+  bookingDetailsHeader: {
     marginTop: 20,
     fontSize: 20, // Adjust the font size as needed
     fontWeight: "bold", // Change to normal if you don't want it bold
@@ -3644,15 +3784,15 @@ const styles = StyleSheet.create({
   },
   modalMessage: {
     paddingHorizontal: 20, // Adds space on both left and right
-    paddingVertical: 10,   // Optional: Adds space on top and bottom
+    paddingVertical: 10, // Optional: Adds space on top and bottom
   },
   modalButtons: {
-flexDirection: "row",         // Arrange items in a row
-  justifyContent: "flex-end",    // Align buttons to the right side
-  alignItems: "center",          // Vertically center the buttons (optional)
-  paddingHorizontal: 20, 
-  paddingVertical: 20, 
-  gap: 10
+    flexDirection: "row", // Arrange items in a row
+    justifyContent: "flex-end", // Align buttons to the right side
+    alignItems: "center", // Vertically center the buttons (optional)
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    gap: 10,
   },
 
   modalContent: {
@@ -3695,7 +3835,6 @@ flexDirection: "row",         // Arrange items in a row
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
-
 
   bookingList: {
     backgroundColor: "#fff",

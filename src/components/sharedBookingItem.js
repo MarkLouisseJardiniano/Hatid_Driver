@@ -84,7 +84,7 @@ const SharedBookingItem = ({
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/onboard?bookingId=${selectedParent}`,
+        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/onboard?bookingId=${selectedParent}`,
         {
           status: updatedStatus,
         },
@@ -156,7 +156,7 @@ const SharedBookingItem = ({
     try {
       // Send a request to drop off the selected parent booking
       const response = await axios.post(
-        "https://zippy-pie-b50d6c.netlify.app/.netlify/functions/api/ride/dropoff",
+        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/dropoff",
         { bookingId: selectedParent } // Send the selected parent booking ID in the body
       );
 
