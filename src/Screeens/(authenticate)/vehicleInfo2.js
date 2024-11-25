@@ -62,7 +62,7 @@ const VehicleInformation2 = () => {
   
       // Send data to the server
       const response = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driver-signup",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/driver-signup",
         signupData
       );
   

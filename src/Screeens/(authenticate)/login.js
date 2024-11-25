@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useRouter } from "expo-router";
 import { useNavigation } from '@react-navigation/native';
+import SvgIcon from "../../../assets/images/svgIcons";
 
 const Login = () => {
   const router = useRouter();
@@ -14,7 +15,7 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const driverData = { email, password };
-      const res = await axios.post(`https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driver-login`, driverData);
+      const res = await axios.post(`https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/driver-login`, driverData);
         
       console.log('Login Response:', res.data); 
     
@@ -42,9 +43,11 @@ const Login = () => {
       Alert.alert('Login Failed', 'Failed to login. Please try again.');
     }
   };
-  
+  const handleForgot = () => {
+    navigation.navigate("Forgot");
+  }
   const handleBackToSignUp = () => {
-    navigation.navigate("Signup");
+    navigation.navigate("SignupStack");
   }
   return (
     <View style={styles.container}>
@@ -62,7 +65,7 @@ const Login = () => {
         secureTextEntry
         style={styles.input}
       />
-      <Text style={styles.forgotPassword}>Forgot Password</Text>
+      <Text style={styles.forgotPassword} onPress={handleForgot}>Forgot Password</Text>
       <TouchableOpacity onPress={handleLogin} style={styles.button}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>

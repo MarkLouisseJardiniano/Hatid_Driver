@@ -4,7 +4,7 @@ import axios from "axios";
 import imagePath from "../../constants/imagePath";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
-const OtpVerificationScreen = ({ route, navigation }) => {
+const ChangepasswordOTP = ({ route, navigation }) => {
   const { email } = route.params; 
   const [otp, setOtp] = useState("");
   const [isDisabled, setIsDisabled] = useState(false);
@@ -18,7 +18,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
         { email, otp }
       );
 
-      navigation.navigate("VehicleInfo2");
+      navigation.navigate("Changepassword", { email });
     } catch (error) {
     
     }
@@ -30,9 +30,8 @@ const OtpVerificationScreen = ({ route, navigation }) => {
     }
 
     try {
-      // Send OTP request
       const response = await axios.post(
-        'https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/otp/generate-driver-otp',
+        'https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/generate-changepassword-otp',
         { email }
       );
 
@@ -143,4 +142,4 @@ const OtpVerificationScreen = ({ route, navigation }) => {
   );
 };
 
-export default OtpVerificationScreen;
+export default ChangepasswordOTP;

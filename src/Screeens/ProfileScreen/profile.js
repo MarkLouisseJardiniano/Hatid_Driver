@@ -29,7 +29,7 @@ const Profile = () => {
   const fetchData = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const res = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driverdata', { token });
+      const res = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/driverdata', { token });
       if (res.data.status === 'ok') {
         setUserData(res.data.data);
         setDriverId(res.data.data._id); 
@@ -46,7 +46,7 @@ const Profile = () => {
     try {
       if (!driverId) return;
   
-      const res = await axios.get(`https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/rate/ratings/${driverId}`);
+      const res = await axios.get(`https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/rate/ratings/${driverId}`);
       
       console.log("API Response:", res.data); 
       if (res.data.status === 'ok') {

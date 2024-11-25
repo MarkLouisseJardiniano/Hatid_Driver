@@ -237,7 +237,7 @@ const Home = ({ route }) => {
 
     try {
       const response = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/copassenger/dropoff",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/copassenger/dropoff",
         { copassengerId: selectedCopassenger } // Send the stored copassengerId in the body
       );
 
@@ -294,7 +294,7 @@ const Home = ({ route }) => {
 
       // Send bookingId in the request payload
       const response = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/complete",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/complete",
         { bookingId } // Updated payload to send bookingId
       );
 
@@ -347,7 +347,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/copassenger/arrived`,
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/copassenger/arrived`,
         {
           copassengerId: selectedCopassenger, // Send copassengerId in the body
         },
@@ -431,7 +431,7 @@ const Home = ({ route }) => {
       // Send a request to update the status to "On board"
 
       const response = await axios.post(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/copassenger/onboard`,
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/copassenger/onboard`,
         {
           copassengerId: selectedCopassenger, // Send copassengerId in the body
         },
@@ -514,7 +514,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/arrived?bookingId=${selectedSpecialTripPassenger}`,
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/arrived?bookingId=${selectedSpecialTripPassenger}`,
         {
           status: updatedStatus,
         },
@@ -588,7 +588,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/onboard?bookingId=${selectedSpecialTripPassenger}`,
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/onboard?bookingId=${selectedSpecialTripPassenger}`,
         {
           status: updatedStatus,
         },
@@ -659,7 +659,7 @@ const Home = ({ route }) => {
     try {
       // Send a request to drop off the selected parent booking
       const response = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/dropoff",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/dropoff",
         { bookingId: selectedSpecialTripPassenger } // Send the selected parent booking ID in the body
       );
 
@@ -711,7 +711,7 @@ const Home = ({ route }) => {
       if (!bookingId) throw new Error("No booking found");
 
       const res = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/complete",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/complete",
         { bookingId },
         {
           headers: {
@@ -788,7 +788,7 @@ const Home = ({ route }) => {
     try {
       // Make the API request to cancel the booking
       const response = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/cancel",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/cancel",
         { bookingId: selectedSpecialTripPassenger }
       );
 
@@ -838,7 +838,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/arrived?bookingId=${selectedParent}`,
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/arrived?bookingId=${selectedParent}`,
         {
           status: updatedStatus,
         },
@@ -913,7 +913,7 @@ const Home = ({ route }) => {
       console.log("Updated status to be sent:", updatedStatus);
 
       const response = await axios.post(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/onboard?bookingId=${selectedParent}`,
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/onboard?bookingId=${selectedParent}`,
         {
           status: updatedStatus,
         },
@@ -984,7 +984,7 @@ const Home = ({ route }) => {
     try {
       // Send a request to drop off the selected parent booking
       const response = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/dropoff",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/dropoff",
         { bookingId: selectedParent } // Send the selected parent booking ID in the body
       );
 
@@ -1029,7 +1029,7 @@ const Home = ({ route }) => {
     try {
       // Make the API request to cancel the booking
       const response = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/cancel",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/cancel",
         { bookingId: selectedParent }
       );
 
@@ -1182,7 +1182,7 @@ const Home = ({ route }) => {
   const updateDriverLocation = async (driverId, curLoc) => {
     try {
       const response = await fetch(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/update-driver-location`,
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/update-driver-location`,
         {
           method: "POST", // Change to POST
           headers: {
@@ -1253,7 +1253,7 @@ const Home = ({ route }) => {
         }
 
         const res = await axios.get(
-          "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/available",
+          "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/available",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -1365,7 +1365,7 @@ const Home = ({ route }) => {
         console.log("Booking ID (accepted parentBooking):", bookingId);
 
         const res = await axios.get(
-          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/joining/shared/${bookingId}`,
+          `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/joining/shared/${bookingId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -1490,7 +1490,7 @@ const Home = ({ route }) => {
   const checkSubscriptionStatus = async (driverId) => {
     try {
       const response = await axios.get(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/subs/subscription/status/${driverId}`
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/subscription/status/${driverId}`
       );
       setSubscribed(response.data.subscribed);
     } catch (error) {
@@ -1536,7 +1536,7 @@ const Home = ({ route }) => {
 
       // Make the POST request to accept the booking
       const res = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/accept",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/accept",
         acceptBooking,
         {
           headers: {
@@ -1690,18 +1690,18 @@ const Home = ({ route }) => {
     try {
       const token = await AsyncStorage.getItem("token");
       const driverId = await AsyncStorage.getItem("driverId");
-      const userId = await AsyncStorage.getItem("userId");
+      const user = await AsyncStorage.getItem("user");
       const curLoc = await getLiveLocation();
 
       // Log values for debugging
       console.log("Token:", token);
       console.log("Driver ID:", driverId);
-      console.log("User ID:", userId);
+      console.log("User ID:", user);
       console.log("Current Location:", curLoc);
       console.log("Booking ID:", bookingId);
 
       // Check for missing values
-      if (!token || !driverId || !bookingId || !curLoc || !userId) {
+      if (!token || !driverId || !bookingId || !curLoc || !user) {
         throw new Error(
           "Missing token, driverId, userId, booking ID, or current location"
         );
@@ -1709,14 +1709,15 @@ const Home = ({ route }) => {
 
       const acceptJoin = {
         newBookingId: bookingId,
-        userId: userId,
+        userId: user,
+        driverId
       };
 
       console.log("Payload to backend:", acceptJoin);
 
       // Make the API request
       const res = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/accept-copassenger",
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/accept-copassenger",
         acceptJoin,
         {
           headers: {
@@ -1940,6 +1941,9 @@ const Home = ({ route }) => {
             Ride Action {item.rideAction || "Ride type not available"}
           </Text>
           <Text>{item.status || "Ride type not available"}</Text>
+          <Text style={styles.commuterinfoText}>
+                            {item.user}
+                          </Text>
           <TouchableOpacity
             style={styles.bookingButton}
             onPress={() => handleAcceptJoinRequest(item._id)}
@@ -2693,6 +2697,7 @@ const Home = ({ route }) => {
                           <Text style={styles.commuterinfoText}>
                             {selectedCoPassenger.status}
                           </Text>
+                     
                         </View>
                       </View>
                       <View style={styles.location}>

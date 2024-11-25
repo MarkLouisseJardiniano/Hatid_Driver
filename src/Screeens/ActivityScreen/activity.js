@@ -40,7 +40,7 @@ const Activity = () => {
         console.log('Fetching activities for driverId:', driverId); // Log userId
   
         const res = await axios.get(
-          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/ride/activities/driver/${driverId}`,
+          `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/ride/activities/driver/${driverId}`,
           {
             headers: {
               "Authorization": `Bearer ${token}`,

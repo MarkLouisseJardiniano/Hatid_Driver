@@ -14,7 +14,7 @@ const EditProfile = () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const res = await axios.put(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/editdriver/${driverId}`,
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/editdriver/${driverId}`,
         {
           name,
           number,
@@ -42,7 +42,7 @@ const EditProfile = () => {
     const fetchData = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const res = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driverdata', { token });
+        const res = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/driverdata', { token });
         if (res.data.status === 'ok') {
           const data = res.data.data;
           setDriverData(data);

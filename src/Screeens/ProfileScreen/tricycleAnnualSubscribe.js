@@ -32,7 +32,7 @@ const AnnualSubscribe = ({ route }) => {
     const fetchUserData = async (id) => {
       try {
         const response = await axios.get(
-          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driver/${id}`
+          `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/driver/${id}`
         );
         console.log('Fetched user data:', response.data);  // Log the full response
 
@@ -72,7 +72,7 @@ const AnnualSubscribe = ({ route }) => {
   
       console.log("Uploading image to server...");
       const fileResponse = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/subs/upload", // Separate image upload route
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/upload", // Separate image upload route
         fileFormData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -131,7 +131,7 @@ const AnnualSubscribe = ({ route }) => {
   
       // Step 3: Send subscription request
       const response = await axios.post(
-        "https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/subs/subscription", // Subscription route
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/subscription", // Subscription route
         subscriptionData
       );
   

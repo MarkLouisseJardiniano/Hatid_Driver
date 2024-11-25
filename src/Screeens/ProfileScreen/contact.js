@@ -19,7 +19,7 @@ const Contact = () => {
     if (!driverId) return;
     try {
       const response = await axios.get(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/contact/driver/${driverId}`
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/contact/driver/${driverId}`
       );
       const fetchedContacts = response.data.length > 0 ? response.data : [];
       setContacts(fetchedContacts);

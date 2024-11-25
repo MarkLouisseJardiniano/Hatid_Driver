@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TouchableOpacity,Button, Alert, Linking } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity,Button, Alert, Linking, Image } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import * as ImagePicker from 'expo-image-picker';
@@ -32,7 +32,7 @@ const Subscription = () => {
 
       // Make the API call to check subscription status
       const res = await axios.get(
-        `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/subs/subscription/status/${driverId}`
+        `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/subscription/status/${driverId}`
       );
       setIsSubscribed(res.data.subscribed);
     } catch (error) {
@@ -65,7 +65,7 @@ const Subscription = () => {
     const fetchUserData = async (id) => {
       try {
         const response = await axios.get(
-          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driver/${id}`
+          `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/driver/${id}`
         );
         setVehicleInfo2(response.data.vehicleInfo2);
       } catch (error) {
@@ -117,12 +117,13 @@ const Subscription = () => {
     const fetchSubscription = async () => {
       try {
         const response = await axios.get(
-          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/subs/subscription/${driverId}`
+          `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/subscription/${driverId}`
         );
         const subscriptionData = response.data;
         setSubscriptionType(subscriptionData.subscriptionType);
         setPrice(subscriptionData.price);
         setStatus(subscriptionData.status);
+        setImage(subscriptionData.receipt)
         const formattedDate = new Date(subscriptionData.startDate).toLocaleDateString('en-PH', {
           year: 'numeric',
           month: 'long',
@@ -147,7 +148,7 @@ const Subscription = () => {
     const fetchEndDate = async () => {
       try {
         const response = await axios.get(
-          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/subs/subscription/end-date/${driverId}`
+          `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/subscription/end-date/${driverId}`
         );
         const subscriptionData = response.data.remainingTime;
 
@@ -205,8 +206,8 @@ const Subscription = () => {
 <Text>₱ {price}/{subscriptionType}</Text>
 
       </View>
-      <View style={{  padding: 15, }}>
-  <View style={{  width: "100%",  padding: 15,backgroundColor: "white", gap: 20,   }}>
+      <View style={{  padding: 15,  }}>
+  <View style={{  width: "100%",  padding: 15,backgroundColor: "white", gap: 20, borderRadius: 10   }}>
     <Text style={{ fontSize: 16, fontWeight: "bold"  }}>Subscription History</Text>
     <View >
       <View style={{ flexDirection: "row",paddingVertical: 10, justifyContent: "space-between" }}>
@@ -227,6 +228,7 @@ const Subscription = () => {
         View all transactions
         </Text>
         </TouchableOpacity>
+       
       </View>
     </View>
   </View>
@@ -346,6 +348,12 @@ const Subscription = () => {
 };
 
 const styles = StyleSheet.create({
+  image: {
+    width: 200,
+    height: 200,
+    marginTop: 10,
+    borderRadius: 10,
+  },
   subscriptionContainer: {
     height: "15%",
     width: "100%",

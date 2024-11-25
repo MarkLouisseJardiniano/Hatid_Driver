@@ -14,16 +14,17 @@ const Documents = ({ route, navigation }) => {
 
   const sendEmail = async (email, name) => {
     try {
-      const response = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/send-email', {
+      const response = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/send-email', {
         email: email,
         name: name,
       });
 
       // Check if the response is successful
       if (response.status === 200) {
- 
-        await AsyncStorage.multiRemove(['driver', 'vehicleInfo2']);
-
+        await AsyncStorage.removeItem('step1Data');
+        await AsyncStorage.removeItem('step3Data');
+        await AsyncStorage.removeItem('uploadedLicenseFiles');
+        await AsyncStorage.removeItem('uploadedVehicleFileNames');
         navigation.navigate('Login');
       }
     } catch (error) {

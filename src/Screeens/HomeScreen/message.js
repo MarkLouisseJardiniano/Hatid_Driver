@@ -11,11 +11,10 @@ const Message = ({ route, navigation }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]); 
 const { userId} =  route.params ;
+
 useEffect(() => {
     const initializeIds = async () => {
       try {
-        // Log when the effect runs
-        console.log('Initializing IDs...');
   
         const loggedInUserId = await AsyncStorage.getItem('driverId'); // Get the current user's ID
         if (loggedInUserId) {
@@ -47,7 +46,7 @@ useEffect(() => {
     }
 
     try {
-      const response = await axios.post('https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/message/send-messages', {
+      const response = await axios.post('https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/message/send-messages', {
         senderId,
         recepientId,
         message,
@@ -68,27 +67,29 @@ useEffect(() => {
 
   // Function to fetch messages
   const fetchMessages = async () => {
-    if (!senderId || !recepientId) return;  // Ensure both IDs are available
-
+    if (!senderId || !recepientId) {
+      return;  // Ensure both IDs are available
+    }
+  
     try {
-      const response = await axios.get(`https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/message/messages/${recepientId}/${senderId}`);
-      setMessages(response.data);  // Store messages in state
+      const response = await axios.get(`https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/message/messages/${recepientId}/${senderId}`);
+      console.log("fetchMessages: Response data:", response.data);
+      setMessages(response.data); 
     } catch (error) {
-      console.error("Error fetching messages:", error);
-     
+      console.error("fetchMessages: Error fetching messages:", error.message);
     }
   };
+  
 
   useEffect(() => {
     if (senderId && recepientId) {
-      fetchMessages();  // Fetch messages initially
-
-      // Set an interval to fetch messages every 3 seconds
+      fetchMessages(); 
+  
       const intervalId = setInterval(() => {
+        
         fetchMessages();
-      }, 3000);
+      }, 2000);
 
-      // Cleanup interval on component unmount or when senderId/recepientId change
       return () => clearInterval(intervalId);
     }
   }, [senderId, recepientId]);  // Re-run when IDs change
@@ -100,13 +101,13 @@ useEffect(() => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 100} 
     >
     <View style={{ flex: 1, justifyContent: 'space-between', padding: 20 }}>
-      {/* FlatList for displaying messages */}
+      
       <FlatList
         data={messages}
         keyExtractor={(item) => item._id.toString()}
         renderItem={({ item }) => {
           const isSender = item.senderId._id === senderId;
-          const isRecipient = item.recepientId === senderId;
+          const isRecipient = item.recepientId._id === senderId;
 
           return (
             <View
@@ -115,7 +116,7 @@ useEffect(() => {
                 isSender ? styles.sentMessage : styles.receivedMessage
               ]}
             >
-              {/* Sender's message (Your message) */}
+         
               {isSender && (
                 <>
                   <Text
@@ -129,7 +130,6 @@ useEffect(() => {
                 </>
               )}
 
-              {/* Recipient's message (Other person’s message) */}
               {isRecipient && (
                 <>
                   {/* <Text
@@ -155,8 +155,7 @@ useEffect(() => {
         }}
       />
 
-      {/* Message input section at the bottom */}
-      <View style={{flexDirection: "row", paddingHorizontal: 20, width: "90%"}}>
+      <View style={{flexDirection: "row", padding: 20, width: "90%"}}>
 
         <TextInput
           style={{backgroundColor: "lightgray", padding: 10, width: "100%", borderRadius: 10}}
