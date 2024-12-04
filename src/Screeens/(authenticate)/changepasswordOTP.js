@@ -90,7 +90,7 @@ const ChangepasswordOTP = ({ route, navigation }) => {
         >
           Email Verification
         </Text>
-        <Text           style={{
+        <Text style={{
             justifyContent: "center",
             alignItems: "center",
             textAlign: "center",
@@ -135,7 +135,9 @@ const ChangepasswordOTP = ({ route, navigation }) => {
 </View>
 
 <TouchableOpacity>
-    <Text style={{ color: "white", backgroundColor: "powderblue", padding: 10, textAlign: "center", borderRadius: 10 }} onPress={handleVerifyOtp}>Confirm</Text>
+    <Text style={{     color: 'black',
+    fontWeight: 'bold',
+    fontSize: 18, backgroundColor: "powderblue", padding: 10, textAlign: "center", borderRadius: 10 }} onPress={handleVerifyOtp}>Confirm</Text>
   </TouchableOpacity>
 
     </View>

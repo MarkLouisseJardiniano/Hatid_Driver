@@ -79,28 +79,46 @@ const Subscription = () => {
 
   
   const handleMonthlySubscribe = () => {
-    setSubscriptionType("Monthly"); // Update the subscription type in state
+    setSubscriptionType("Monthly");
   
     console.log("Driver ID:", driverId);
     console.log("Subscription Type:", "Monthly");
   
-    navigation.navigate("MonthlySubscribe", { subscriptionType: "Monthly", driverId });
+    const vehicleType = vehicleInfo2.vehicleType;
+  
+    if (vehicleType === "Tricycle") {
+      navigation.navigate("TricycleMonthlySubscribe", { subscriptionType: "Monthly", driverId });
+    } else {
+      navigation.navigate("MonthlySubscribe", { subscriptionType: "Monthly", driverId });
+    }
   };
   
   // Function to handle Quarterly Subscription with navigation
   const handleQuarterlySubscribe = () => {
-    setSubscriptionType("Quarterly"); // Update the subscription type in state
-
-    navigation.navigate("QuarterlySubscribe", { subscriptionType: "Quarterly", driverId });
+    setSubscriptionType("Quarterly");
+  
+    const vehicleType = vehicleInfo2.vehicleType ; 
+  
+    if (vehicleType === "Tricycle") {
+      navigation.navigate("TricycleQuarterlySubscribe", { subscriptionType: "Quarterly", driverId });
+    } else {
+      navigation.navigate("QuarterlySubscribe", { subscriptionType: "Quarterly", driverId });
+    }
   };
   
-
-  // Function to handle Annually Subscription with navigation
-  const handleAnnuallySubscribe =  () => {
-    setSubscriptionType("Annually"); // Update the subscription type in state
-
-    navigation.navigate("AnnualSubscribe", { subscriptionType: "Annually", driverId });
+  const handleAnnuallySubscribe = () => {
+    setSubscriptionType("Annually");
+  
+    const vehicleType = vehicleInfo2.vehicleType;
+  
+    if (vehicleType === "Tricycle") {
+      navigation.navigate("TricycleAnnualSubscribe", { subscriptionType: "Annually", driverId });
+    } else {
+      navigation.navigate("AnnualSubscribe", { subscriptionType: "Annually", driverId });
+    }
   };
+  
+  
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -174,10 +192,10 @@ const Subscription = () => {
           }}
         >
           <View style={{ flexDirection: "column" }}>
-            <Text style={{ color: "white", fontSize: 20, fontWeight: "bold" }}>
+            <Text style={{ color: "white", fontSize: 24, fontWeight: "bold" }}>
               Your subscription
             </Text>
-            <Text style={{ color: "white", fontSize: 12 }}>
+            <Text style={{ color: "white", fontSize: 14 }}>
               Next Renewal in {expiredDate}
             </Text>
           </View>
@@ -241,7 +259,7 @@ const Subscription = () => {
     <View style={styles.container}>
     <View style={{    height: "15%",
     width: "100%",
-    backgroundColor: "black",
+    backgroundColor: "powderblue",
     justifyContent: "center",
     padding: 20}}>
     <Text style={styles.title}>Choose Your Subscription</Text>
@@ -276,7 +294,7 @@ const Subscription = () => {
         <Text>₱1299 / Quarterly</Text>
         <TouchableOpacity
           style={styles.subscribeButton}
-          onPress={handleMonthlySubscribe}
+          onPress={handleQuarterlySubscribe}
         >
           <Text style={styles.subscribeButtonText}>Subscribe</Text>
         </TouchableOpacity>
@@ -288,7 +306,7 @@ const Subscription = () => {
         <Text>₱4599 / Annually</Text>
         <TouchableOpacity
           style={styles.subscribeButton}
-          onPress={handleMonthlySubscribe}
+          onPress={handleAnnuallySubscribe}
         >
           <Text style={styles.subscribeButtonText}>Subscribe</Text>
         </TouchableOpacity>
@@ -357,7 +375,7 @@ const styles = StyleSheet.create({
   subscriptionContainer: {
     height: "15%",
     width: "100%",
-    backgroundColor: "black",
+    backgroundColor: "powderblue",
     justifyContent: "center",
   },
   container: {
@@ -372,7 +390,9 @@ const styles = StyleSheet.create({
   header: {
     fontWeight: "700",
     marginBottom: 10,
-        color: "white"
+        color: "white",
+        fontSize: 20,
+    
   },
   subtitle: {
     fontSize: 18,
@@ -429,7 +449,7 @@ const styles = StyleSheet.create({
   subscribeButton: {
     marginTop: 20,
     padding: 15,
-    backgroundColor: "black",
+    backgroundColor: "powderblue",
     borderRadius: 5,
     alignItems: "center",
   },

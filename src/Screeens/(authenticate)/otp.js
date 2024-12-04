@@ -12,7 +12,6 @@ const OtpVerificationScreen = ({ route, navigation }) => {
 
   const handleVerifyOtp = async () => {
     try {
-      // Send OTP verification request to the backend
       const response = await axios.post(
         "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/otp/driver-verify-otp",
         { email, otp }
@@ -126,7 +125,7 @@ const OtpVerificationScreen = ({ route, navigation }) => {
       >
         <Text
           style={{
-            color: isDisabled ? "gray" : "blue", // Change color based on the button state
+            color: isDisabled ? "gray" : "blue", 
             textAlign: "center",
           }}
         >

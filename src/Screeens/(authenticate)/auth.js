@@ -1,22 +1,17 @@
 import React from 'react';
 import { View, Image, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
+import imagePath from '../../constants/imagePath';
 const Auth = () => {
   const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
-      <Image
-        // source={imagePath.logo}
-        style={{
-          width: 250,
-          height: 100,
-          marginLeft: 20,
-          marginTop: 100,
-        }}
-        resizeMode="contain"
-      />
+            <Image
+            source={imagePath.logo}
+            style={{width: 250, height: 250, alignItems: "center",}}
+            resizeMode="contain"
+          />
       <View style={styles.buttonList}>
         <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.button}>
           <Text style={styles.buttonText}>Login</Text>
@@ -41,10 +36,11 @@ const styles = StyleSheet.create({
     marginTop: 20, 
   },
   buttonText: {
-    fontSize: 20,
+    fontSize: 18,
+    fontWeight: "bold"
   },
   button: {
-    backgroundColor: '#4F8EF7',
+    backgroundColor: 'powderblue',
     marginHorizontal: 10,
     borderRadius: 10,
     width: 300,

@@ -236,13 +236,13 @@ const pickImage = async () => {
 
         <TouchableOpacity
           style={{
-            backgroundColor: "black",
+            backgroundColor: "powderblue",
             padding: 10,
             borderRadius: 10,
           }}
           onPress={handleSubscription}
         >
-          <Text style={{ color: "white", textAlign: "center" }}>Submit Payment</Text>
+          <Text style={{ color: "white", textAlign: "center", fontWeight: "bold" }}>Submit Payment</Text>
         </TouchableOpacity>
       </View>
     </View>

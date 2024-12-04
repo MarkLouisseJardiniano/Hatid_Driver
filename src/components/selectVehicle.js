@@ -1,4 +1,3 @@
-// components/selectVehicle.js
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
@@ -7,7 +6,7 @@ const VehicleOptions = ({ onSelectVehicle }) => {
 
   const handleSelectVehicle = (vehicle) => {
     setSelectedVehicle(vehicle);
-    onSelectVehicle(vehicle); // Pass selected vehicle to parent component
+    onSelectVehicle(vehicle); 
   };
 
   return (

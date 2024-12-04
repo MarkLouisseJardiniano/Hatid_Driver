@@ -12,7 +12,7 @@ import AnnualSubscribe from '../Screeens/ProfileScreen/JeepAnnualSubscribe';
 import TricycleMonthlySubscribe from '../Screeens/ProfileScreen/monthlyTricycleSubscribe';
 import TricycleQuarterlySubscribe from '../Screeens/ProfileScreen/tricycleQuarterlySubscribe';
 import TricycleAnnualSubscribe from '../Screeens/ProfileScreen/tricycleAnnualSubscribe';
-
+import ChangeEmailVerification from '../Screeens/ProfileScreen/changeEmailVerification';
 
 const Stack = createStackNavigator();
 
@@ -27,8 +27,9 @@ export default function Layout() {
       <Stack.Screen name="EditProfile" component={EditProfile} />
       <Stack.Screen name="Contact" component={Contact} />
       <Stack.Screen name="AddContact" component={AddContact} />
-      <Stack.Screen name="Subscription" component={Subscription}  options={{ headerStyle: { backgroundColor: 'black',      elevation: 0,
-      shadowOpacity: 0,  }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold' } }} />
+      <Stack.Screen name="ChangeEmailVerification" component={ChangeEmailVerification} />
+      <Stack.Screen name="Subscription" component={Subscription}  options={{ headerStyle: { backgroundColor: 'powderblue',      elevation: 0,
+      shadowOpacity: 0,  }, headerTintColor: '#fff', headerTitleStyle: { fontWeight: 'bold', color:"white" } }} />
       <Stack.Screen name="TricycleMonthlySubscribe" component={TricycleMonthlySubscribe} />
       <Stack.Screen name="TricycleQuarterlySubscribe" component={TricycleQuarterlySubscribe} />
       <Stack.Screen name="TricycleAnnualSubscribe" component={TricycleAnnualSubscribe} />

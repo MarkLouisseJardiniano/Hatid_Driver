@@ -72,7 +72,9 @@ const Changepassword = ({ route, navigation }) => {
                 {loading ? (
                     <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                    <Text style={{ color: "white", textAlign: "center" }}>Reset Password</Text>
+                    <Text style={{     color: 'black',
+    fontWeight: 'bold',
+    fontSize: 18, textAlign: "center" }}>Reset Password</Text>
                 )}
             </TouchableOpacity>
         </View>
@@ -91,9 +93,10 @@ const styles = StyleSheet.create({
     },
     button: {
         padding: 10,
-        backgroundColor: "black",
+        backgroundColor: "powderblue",
         marginTop: 20,
         alignItems: "center",
         justifyContent: "center",
+        borderRadius:10
     },
 });

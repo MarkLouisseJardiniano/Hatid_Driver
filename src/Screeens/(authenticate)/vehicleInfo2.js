@@ -21,17 +21,11 @@ const VehicleInformation2 = () => {
   const [capacity, setCapacity] = useState("");
   const handleSignup = async () => {
     try {
-      // Retrieve data from AsyncStorage
-      const driver = await AsyncStorage.getItem('driver'); // Use a string key instead of an array
-  
+      const driver = await AsyncStorage.getItem('driver');
       if (!driver) {
         throw new Error("Required data not found in AsyncStorage.");
       }
-  
-      // Parse the retrieved data
       const driverData = JSON.parse(driver);
-  
-      // Validate required fields
       if (!vehicleType || !model || !year || !color || !plateNumber || !capacity) {
         Alert.alert("Validation Error", "All fields are required.");
         return;

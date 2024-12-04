@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Alert, Platform } from 'react-native';
 import React, { useState, useEffect } from "react";
 import imagePath from "../../constants/imagePath";
 import * as ImagePicker from 'expo-image-picker';
@@ -6,7 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 
-const MonthlySubscribe = ({ route }) => {
+const TricycleMonthlySubscribe = ({ route }) => {
   const [image, setImage] = useState(null);
   const [vehicleInfo2, setVehicleInfo2] = useState(null);
   const [driverId, setDriverId] = useState(null);
@@ -32,7 +32,7 @@ const MonthlySubscribe = ({ route }) => {
     const fetchUserData = async (id) => {
       try {
         const response = await axios.get(
-          `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/driver/driver/${id}`
+          `https://melodious-conkies-9be892.netlify.app/.netlify/functions/api/driver/driver/${id}`
         );
         console.log('Fetched user data:', response.data);  // Log the full response
 
@@ -59,32 +59,41 @@ const MonthlySubscribe = ({ route }) => {
     }
   }, [vehicleInfo2]);
 
-  const handleImageUpload = async () => {
+const uploadImage = async (image) => {
+  if (image && image.uri) {
+    console.log("Image selected, starting image upload...");
+    
+    const fileName = image.uri.split('/').pop();
+    console.log("Extracted image file name:", fileName);
+    
+    const formData = new FormData();
+    formData.append('file', {
+      uri: image.uri,
+      name: fileName,
+      type: 'image/jpeg',
+    });
+
     try {
-      // Step 1: Upload the image
-      console.log("Image URI found, preparing for upload...");
-      const fileFormData = new FormData();
-      fileFormData.append("file", {
-        uri: image.uri,
-        type: image.type,
-        name: image.uri.split('/').pop(),
-      });
-  
-      console.log("Uploading image to server...");
+      // Post the FormData to the server
       const fileResponse = await axios.post(
-        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/upload", // Separate image upload route
-        fileFormData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/upload",
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
       );
-  
+
       console.log("File upload response:", fileResponse.data);
-  
-      // Check if the file upload was successful
+
+      // Check if signedUrl exists in the response
       if (fileResponse.data && fileResponse.data.signedUrl) {
-        return fileResponse.data.signedUrl; // Return the image URL
+        console.log("Image signed URL successfully retrieved:", fileResponse.data.signedUrl);
+        return fileResponse.data.signedUrl;  // Return the signed URL instead of image name
       } else {
-        Alert.alert("Error", "Failed to upload image.");
-        console.log("Image upload failed.");
+        console.log("No signed URL returned from server.");
+        Alert.alert("Error", "Image upload failed, cannot proceed with subscription.");
         return null;
       }
     } catch (error) {
@@ -92,83 +101,83 @@ const MonthlySubscribe = ({ route }) => {
       Alert.alert("Error", "There was an error uploading the image.");
       return null;
     }
-  };
-  
-  const handleSubscription = async () => {
-    const vehicleType = vehicleInfo2 ? vehicleInfo2.vehicleType : null;
-    if (!vehicleType) {
-      Alert.alert("Error", "Vehicle type is not available");
-      return;
-    }
-  
-    console.log("Starting subscription process...");
-  
-    try {
-      let imageUrl = null;
-  
-      // Step 1: If an image is selected, upload it first
-      if (image && image.uri) {
-        console.log("Uploading image...");
-        imageUrl = await handleImageUpload();  // Call the image upload function
-  
-        if (!imageUrl) {
-          Alert.alert("Error", "Image upload failed, cannot proceed with subscription.");
-          return;
-        }
-      } else {
-        console.log("No image selected, proceeding without an image...");
-      }
-  
-      // Step 2: Create the subscription data (image URL will be passed if available)
-      const subscriptionData = {
-        driverId,
-        subscriptionType,
-        vehicleType,
-        receipt: imageUrl,  // Send the uploaded image URL (or null if no image)
-      };
-  
-      console.log("Sending subscription data:", subscriptionData);
-  
-      // Step 3: Send subscription request
-      const response = await axios.post(
-        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/subscription", // Subscription route
-        subscriptionData
-      );
-  
-      console.log("Subscription response:", response.data);
-  
-      if (response.data.subscription) {
-        navigation.navigate("Home");
-        Alert.alert("Success", "Subscription created successfully");
-        console.log("Subscription created:", response.data.subscription);
-      } else {
-        Alert.alert("Error", "Failed to create subscription");
-        console.log("Failed to create subscription.");
-      }
-  
-    } catch (error) {
-      console.error("Error creating subscription:", error);
-      Alert.alert("Error", "There was an error creating the subscription.");
-    }
-  };
-  
-  
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-    });
+  } else {
+    console.log("No image selected, proceeding without an image...");
+    return null;
+  }
+};
 
-    if (!result.cancelled) {
-      // Set the full image object, not just the file name
-      setImage(result.assets[0]);
+// Function to handle the subscription process
+const handleSubscription = async () => {
+  const vehicleType = vehicleInfo2 ? vehicleInfo2.vehicleType : null;
+
+  // Log the vehicle type selection
+  console.log("Selected vehicle type:", vehicleType);
+
+  if (!vehicleType) {
+    Alert.alert("Error", "Vehicle type is not available");
+    return;
+  }
+
+  console.log("Starting subscription process...");
+
+  try {
+    let signedUrl = await uploadImage(image); 
+
+    // If no signed URL is returned, proceed without the image
+    if (!signedUrl) {
+      console.log("Proceeding without image...");
     }
 
-    // Log variables for debugging
-    console.log("Driver ID:", driverId);
-    console.log("Subscription Type:", subscriptionType);
-    console.log("Vehicle Type:", vehicleInfo2 ? vehicleInfo2.vehicleType : "Loading...");
-  };
+    const subscriptionData = {
+      driverId,
+      subscriptionType,
+      vehicleType,
+      receipt: signedUrl || null, // Set receipt as the signed URL or null if no image
+    };
+
+    console.log("Sending subscription data:", subscriptionData);
+
+    // Step 2: Send subscription request
+    const response = await axios.post(
+      "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/subs/subscription",
+      subscriptionData
+    );
+
+    console.log("Subscription response:", response.data);
+
+    if (response.data.subscription) {
+      console.log("Subscription created successfully:", response.data.subscription);
+      navigation.navigate("Home");
+      Alert.alert("Success", "Subscription created successfully");
+    } else {
+      Alert.alert("Error", "Failed to create subscription");
+      console.log("Failed to create subscription.");
+    }
+  } catch (error) {
+    console.error("Error creating subscription:", error);
+    Alert.alert("Error", "There was an error creating the subscription.");
+  }
+};
+
+
+const pickImage = async () => {
+  let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    quality: 0.3,
+  });
+
+  if (!result.cancelled) {
+    // Set the full image object, not just the file name
+    setImage(result.assets[0]);
+  }
+
+  // Log variables for debugging
+  console.log("Driver ID:", driverId);
+  console.log("Subscription Type:", subscriptionType);
+  console.log("Vehicle Type:", vehicleInfo2 ? vehicleInfo2.vehicleType : "Loading...");
+};
+
 
   return (
     <View style={{ backgroundColor: "white", flex: 1, padding: 40 }}>
@@ -227,19 +236,20 @@ const MonthlySubscribe = ({ route }) => {
 
         <TouchableOpacity
           style={{
-            backgroundColor: "black",
+            backgroundColor: "powderblue",
             padding: 10,
             borderRadius: 10,
           }}
           onPress={handleSubscription}
         >
-          <Text style={{ color: "white", textAlign: "center" }}>Submit Payment</Text>
+          <Text style={{ color: "white", textAlign: "center", fontWeight: "bold" }}>Submit Payment</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-export default MonthlySubscribe;
+export default TricycleMonthlySubscribe;
 
 const styles = StyleSheet.create({});
+

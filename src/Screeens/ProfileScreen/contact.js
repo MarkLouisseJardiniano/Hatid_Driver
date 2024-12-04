@@ -15,16 +15,32 @@ const Contact = () => {
   const [contacts, setContacts] = useState([]);
   const [driverId, setDriverId] = useState(null);
 
-  const fetchContacts = async () => {
+  // Fetch sample contacts
+  const fetchSampleContacts = async () => {
+    try {
+      const response = await axios.get(
+        "https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/contact/sample"
+      );
+      console.log("Sample Contacts Response:", response.data);
+      return response.data; // Return sample contacts
+    } catch (error) {
+      console.error("Error fetching sample contacts:", error);
+      return []; // Return an empty array in case of error
+    }
+  };
+
+  // Fetch driver-specific contacts
+  const fetchDriverContacts = async () => {
     if (!driverId) return;
     try {
       const response = await axios.get(
         `https://serverless-api-hatid-5.onrender.com/.netlify/functions/api/contact/driver/${driverId}`
       );
       const fetchedContacts = response.data.length > 0 ? response.data : [];
-      setContacts(fetchedContacts);
+      return fetchedContacts; // Return driver contacts
     } catch (err) {
-      console.error("Error fetching contacts:", err);
+      console.error("Error fetching driver contacts:", err);
+      return []; // Return empty array in case of error
     }
   };
 
@@ -40,25 +56,28 @@ const Contact = () => {
           setDriverId(storedDriverId);
         }
       } catch (err) {
-        console.error("Error fetching user ID:", err);
-    
+        console.error("Error fetching driver ID:", err);
       }
     };
 
     fetchDriverId();
   }, []);
 
+  // Fetch both contacts (driver and sample) and combine them
   useEffect(() => {
-    if (driverId) {
-      fetchContacts();
+    const fetchAllContacts = async () => {
+      if (driverId) {
+        const [sampleContacts, driverContacts] = await Promise.all([
+          fetchSampleContacts(),
+          fetchDriverContacts(),
+        ]);
 
-      const interval = setInterval(() => {
-        fetchContacts();
-      }, 300);
+        // Combine both sample and driver contacts
+        setContacts([...sampleContacts, ...driverContacts]);
+      }
+    };
 
-    
-      return () => clearInterval(interval);
-    }
+    fetchAllContacts();
   }, [driverId]);
 
   const renderContact = useCallback(
@@ -77,10 +96,10 @@ const Contact = () => {
     <View style={styles.container}>
       <FlatList
         data={contacts}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item) => item._id || item.id || item.name} // Ensure unique key
         renderItem={renderContact}
         initialNumToRender={10}
-        windowSize={5} 
+        windowSize={5}
         ListEmptyComponent={
           <Text style={styles.emptyText}>No contacts available</Text>
         }
@@ -97,6 +116,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "white",
   },
   contactContainer: {
     padding: 10,
